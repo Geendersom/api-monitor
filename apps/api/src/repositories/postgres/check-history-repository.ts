@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
 
 import type { CheckResult } from "../../monitors/history.js";
+import type { UptimeStatsAggregate } from "../../monitors/uptime.js";
 import type { CheckHistoryRepository } from "../types.js";
 
 type CheckResultRow = {
@@ -102,5 +103,50 @@ export class PostgresCheckHistoryRepository implements CheckHistoryRepository {
     );
 
     return result.rows.map(mapCheckResultRow);
+  }
+
+  async getUptimeStats(
+    monitorId: string,
+    from: string,
+    to: string,
+  ): Promise<UptimeStatsAggregate> {
+    const result = await this.pool.query<{
+      total_checks: string;
+      successful_checks: string;
+      failed_checks: string;
+      average_response_time_ms: string | null;
+    }>(
+      `
+        SELECT
+          COUNT(*)::TEXT AS total_checks,
+          COUNT(*) FILTER (WHERE status = 'up')::TEXT AS successful_checks,
+          COUNT(*) FILTER (WHERE status = 'down')::TEXT AS failed_checks,
+          AVG(response_time_ms)::TEXT AS average_response_time_ms
+        FROM check_results
+        WHERE monitor_id = $1
+          AND checked_at >= $2
+          AND checked_at <= $3
+      `,
+      [monitorId, from, to],
+    );
+
+    const row = result.rows[0];
+    const totalChecks = Number(row?.total_checks ?? 0);
+
+    if (totalChecks === 0) {
+      return {
+        totalChecks: 0,
+        successfulChecks: 0,
+        failedChecks: 0,
+        averageResponseTimeMs: 0,
+      };
+    }
+
+    return {
+      totalChecks,
+      successfulChecks: Number(row?.successful_checks ?? 0),
+      failedChecks: Number(row?.failed_checks ?? 0),
+      averageResponseTimeMs: Number(row?.average_response_time_ms ?? 0),
+    };
   }
 }

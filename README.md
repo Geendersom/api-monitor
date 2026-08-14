@@ -158,6 +158,33 @@ Retorna o status básico da aplicação.
 }
 ```
 
+### `GET /monitors/:id/uptime?period=24h|7d|30d`
+
+Retorna a disponibilidade histórica de um monitor no período solicitado, com base **somente nos checks efetivamente registrados** em `check_results`.
+
+**Query parameter obrigatório:** `period` (`24h`, `7d` ou `30d`)
+
+**Resposta de exemplo:**
+
+```json
+{
+  "monitorId": "00000000-0000-0000-0000-000000000001",
+  "period": "7d",
+  "from": "2026-08-07T20:00:00.000Z",
+  "to": "2026-08-14T20:00:00.000Z",
+  "totalChecks": 100,
+  "successfulChecks": 97,
+  "failedChecks": 3,
+  "uptimePercentage": 97,
+  "averageResponseTimeMs": 142
+}
+```
+
+**Erros comuns:**
+
+- `400` — `{ "error": "Invalid period" }` quando `period` está ausente ou é inválido
+- `404` — `{ "error": "Monitor not found" }` quando o monitor não existe
+
 ## Development
 
 Comandos disponíveis na raiz do repositório:

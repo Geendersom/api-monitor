@@ -1,5 +1,6 @@
 import type { AlertEvent, AlertType } from "../monitors/alerts.js";
 import type { CheckResult } from "../monitors/history.js";
+import type { UptimeStatsAggregate } from "../monitors/uptime.js";
 import type { Incident } from "../monitors/incidents.js";
 import type { CreateMonitorInput, Monitor } from "../monitors/types.js";
 
@@ -13,6 +14,11 @@ export interface CheckHistoryRepository {
   add(result: CheckResult): Promise<CheckResult>;
   findByMonitorId(monitorId: string): Promise<CheckResult[]>;
   listAll(): Promise<CheckResult[]>;
+  getUptimeStats(
+    monitorId: string,
+    from: string,
+    to: string,
+  ): Promise<UptimeStatsAggregate>;
 }
 
 export interface IncidentRepository {

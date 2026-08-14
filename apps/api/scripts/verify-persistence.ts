@@ -123,8 +123,7 @@ const main = async () => {
         monitorId,
         monitors: (beforeRestart.monitors.body.monitors as unknown[]).length,
         checks: (beforeRestart.checks.body.checks as unknown[]).length,
-        incidents: (beforeRestart.incidents.body.incidents as unknown[])
-          .length,
+        incidents: (beforeRestart.incidents.body.incidents as unknown[]).length,
         alerts: (beforeRestart.alerts.body.alerts as unknown[]).length,
         stats: beforeRestart.stats.body,
       },
@@ -162,37 +161,47 @@ const main = async () => {
   const assertions = [
     {
       name: "Monitor sobrevive ao restart",
-      pass: JSON.stringify(beforeRestart.monitor.body) ===
+      pass:
+        JSON.stringify(beforeRestart.monitor.body) ===
         JSON.stringify(afterRestart.monitor.body),
     },
     {
       name: "Lista de monitores preservada",
-      pass: JSON.stringify(beforeRestart.monitors.body) ===
+      pass:
+        JSON.stringify(beforeRestart.monitors.body) ===
         JSON.stringify(afterRestart.monitors.body),
     },
     {
       name: "Histórico de checks preservado",
-      pass: checksBefore.length === 3 && checksBefore.length === checksAfter.length &&
+      pass:
+        checksBefore.length === 3 &&
+        checksBefore.length === checksAfter.length &&
         JSON.stringify(checksBefore) === JSON.stringify(checksAfter),
     },
     {
       name: "Stats preservadas",
-      pass: JSON.stringify(beforeRestart.stats.body) ===
+      pass:
+        JSON.stringify(beforeRestart.stats.body) ===
         JSON.stringify(afterRestart.stats.body),
     },
     {
       name: "Incidentes preservados",
-      pass: incidentsBefore.length === 1 && incidentsBefore.length === incidentsAfter.length &&
+      pass:
+        incidentsBefore.length === 1 &&
+        incidentsBefore.length === incidentsAfter.length &&
         JSON.stringify(incidentsBefore) === JSON.stringify(incidentsAfter),
     },
     {
       name: "Alertas do monitor preservados",
-      pass: alertsBefore.length === 2 && alertsBefore.length === alertsAfter.length &&
+      pass:
+        alertsBefore.length === 2 &&
+        alertsBefore.length === alertsAfter.length &&
         JSON.stringify(alertsBefore) === JSON.stringify(alertsAfter),
     },
     {
       name: "GET /alerts preservado",
-      pass: JSON.stringify(beforeRestart.allAlerts.body) ===
+      pass:
+        JSON.stringify(beforeRestart.allAlerts.body) ===
         JSON.stringify(afterRestart.allAlerts.body),
     },
     {

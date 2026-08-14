@@ -9,6 +9,7 @@ import type {
 import type { HealthCheckOptions } from "./check.js";
 import { runMonitorCheck } from "./run-check.js";
 import { calculateMonitorStats } from "./stats.js";
+import { getMonitorUptime, parseUptimePeriod } from "./uptime.js";
 import { validateCreateMonitorBody } from "./validation.js";
 
 export const registerMonitorRoutes = (
@@ -91,6 +92,31 @@ export const registerMonitorRoutes = (
       const checks = await checkHistoryRepository.findByMonitorId(monitor.id);
 
       return calculateMonitorStats(monitor.id, checks);
+    },
+  );
+
+  app.get<{ Params: { id: string }; Querystring: { period?: string } }>(
+    "/monitors/:id/uptime",
+    async (request, reply) => {
+      const monitor = await monitorRepository.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      const period = parseUptimePeriod(request.query.period);
+
+      if (!period) {
+        return reply.status(400).send({ error: "Invalid period" });
+      }
+
+      const uptime = await getMonitorUptime(
+        monitor.id,
+        period,
+        checkHistoryRepository.getUptimeStats.bind(checkHistoryRepository),
+      );
+
+      return reply.status(200).send(uptime);
     },
   );
 
