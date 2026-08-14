@@ -1,0 +1,40 @@
+import type { FastifyInstance } from "fastify";
+
+import type { MonitorStore } from "./store.js";
+import { validateCreateMonitorBody } from "./validation.js";
+
+export const registerMonitorRoutes = (
+  app: FastifyInstance,
+  store: MonitorStore,
+): void => {
+  app.post("/monitors", async (request, reply) => {
+    const validation = validateCreateMonitorBody(request.body);
+
+    if (!validation.success) {
+      return reply.status(400).send({ error: validation.error });
+    }
+
+    const monitor = store.create(validation.data);
+
+    return reply.status(201).send(monitor);
+  });
+
+  app.get("/monitors", async () => {
+    return {
+      monitors: store.findAll(),
+    };
+  });
+
+  app.get<{ Params: { id: string } }>(
+    "/monitors/:id",
+    async (request, reply) => {
+      const monitor = store.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      return monitor;
+    },
+  );
+};
