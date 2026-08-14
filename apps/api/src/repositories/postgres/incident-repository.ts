@@ -6,7 +6,7 @@ import {
   DEFAULT_INCIDENT_REASON,
   type Incident,
 } from "../../monitors/incidents.js";
-import type { IncidentRepository } from "../types.js";
+import type { IncidentRepository, IncidentStatusCounts } from "../types.js";
 
 type IncidentRow = {
   id: string;
@@ -151,5 +151,26 @@ export class PostgresIncidentRepository implements IncidentRepository {
     );
 
     return result.rows.map(mapIncidentRow);
+  }
+
+  async countByStatus(): Promise<IncidentStatusCounts> {
+    const result = await this.pool.query<{
+      open_count: string;
+      resolved_count: string;
+    }>(
+      `
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'open')::TEXT AS open_count,
+          COUNT(*) FILTER (WHERE status = 'resolved')::TEXT AS resolved_count
+        FROM incidents
+      `,
+    );
+
+    const row = result.rows[0];
+
+    return {
+      open: Number(row?.open_count ?? 0),
+      resolved: Number(row?.resolved_count ?? 0),
+    };
   }
 }

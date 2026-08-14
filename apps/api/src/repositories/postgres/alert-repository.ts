@@ -129,4 +129,32 @@ export class PostgresAlertRepository implements AlertRepository {
 
     return result.rows.map(mapAlertEventRow);
   }
+
+  async countAll(): Promise<number> {
+    const result = await this.pool.query<{ count: string }>(
+      "SELECT COUNT(*)::TEXT AS count FROM alert_events",
+    );
+
+    return Number(result.rows[0]?.count ?? 0);
+  }
+
+  async findRecent(limit: number): Promise<AlertEvent[]> {
+    const result = await this.pool.query<AlertEventRow>(
+      `
+        SELECT
+          id,
+          monitor_id,
+          incident_id,
+          type,
+          created_at,
+          message
+        FROM alert_events
+        ORDER BY created_at DESC
+        LIMIT $1
+      `,
+      [limit],
+    );
+
+    return result.rows.map(mapAlertEventRow);
+  }
 }

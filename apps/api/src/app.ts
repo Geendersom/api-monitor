@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
+import { registerDashboardRoutes } from "./dashboard/routes.js";
 import { AlertStore } from "./monitors/alerts.js";
 import type { HealthCheckOptions } from "./monitors/check.js";
 import { CheckHistoryStore } from "./monitors/history.js";
@@ -100,6 +101,8 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
     repositories.maintenanceRepository,
     healthCheckOptions,
   );
+
+  registerDashboardRoutes(app, repositories);
 
   return app;
 };

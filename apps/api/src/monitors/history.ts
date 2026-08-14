@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 
-import type { CheckHistoryRepository } from "../repositories/types.js";
+import type {
+  CheckHistoryRepository,
+  MonitorLatestStatus,
+} from "../repositories/types.js";
 import type { UptimeStatsAggregate } from "./uptime.js";
 import type { HealthCheckResult } from "./check.js";
 
@@ -92,5 +95,58 @@ export class CheckHistoryStore implements CheckHistoryRepository {
       failedChecks,
       averageResponseTimeMs: totalResponseTimeMs / checks.length,
     };
+  }
+
+  async getOverallUptimeStats(
+    from: string,
+    to: string,
+  ): Promise<UptimeStatsAggregate> {
+    const checks = (await this.listAll()).filter(
+      (check) => check.checkedAt >= from && check.checkedAt <= to,
+    );
+
+    if (checks.length === 0) {
+      return {
+        totalChecks: 0,
+        successfulChecks: 0,
+        failedChecks: 0,
+        averageResponseTimeMs: 0,
+      };
+    }
+
+    const successfulChecks = checks.filter(
+      (check) => check.status === "up",
+    ).length;
+    const failedChecks = checks.filter(
+      (check) => check.status === "down",
+    ).length;
+    const totalResponseTimeMs = checks.reduce(
+      (sum, check) => sum + check.responseTimeMs,
+      0,
+    );
+
+    return {
+      totalChecks: checks.length,
+      successfulChecks,
+      failedChecks,
+      averageResponseTimeMs: totalResponseTimeMs / checks.length,
+    };
+  }
+
+  async getLatestCheckStatusByMonitor(): Promise<MonitorLatestStatus[]> {
+    const latestByMonitorId = new Map<string, CheckResult>();
+
+    for (const check of await this.listAll()) {
+      const current = latestByMonitorId.get(check.monitorId);
+
+      if (!current || check.checkedAt >= current.checkedAt) {
+        latestByMonitorId.set(check.monitorId, check);
+      }
+    }
+
+    return Array.from(latestByMonitorId.values()).map((check) => ({
+      monitorId: check.monitorId,
+      status: check.status,
+    }));
   }
 }

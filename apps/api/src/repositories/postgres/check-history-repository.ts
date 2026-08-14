@@ -3,6 +3,7 @@ import type { Pool } from "pg";
 import type { CheckResult } from "../../monitors/history.js";
 import type { UptimeStatsAggregate } from "../../monitors/uptime.js";
 import type { CheckHistoryRepository } from "../types.js";
+import type { MonitorLatestStatus } from "../types.js";
 
 type CheckResultRow = {
   id: string;
@@ -148,5 +149,68 @@ export class PostgresCheckHistoryRepository implements CheckHistoryRepository {
       failedChecks: Number(row?.failed_checks ?? 0),
       averageResponseTimeMs: Number(row?.average_response_time_ms ?? 0),
     };
+  }
+
+  async getOverallUptimeStats(
+    from: string,
+    to: string,
+  ): Promise<UptimeStatsAggregate> {
+    const result = await this.pool.query<{
+      total_checks: string;
+      successful_checks: string;
+      failed_checks: string;
+      average_response_time_ms: string | null;
+    }>(
+      `
+        SELECT
+          COUNT(*)::TEXT AS total_checks,
+          COUNT(*) FILTER (WHERE status = 'up')::TEXT AS successful_checks,
+          COUNT(*) FILTER (WHERE status = 'down')::TEXT AS failed_checks,
+          AVG(response_time_ms)::TEXT AS average_response_time_ms
+        FROM check_results
+        WHERE checked_at >= $1
+          AND checked_at <= $2
+      `,
+      [from, to],
+    );
+
+    const row = result.rows[0];
+    const totalChecks = Number(row?.total_checks ?? 0);
+
+    if (totalChecks === 0) {
+      return {
+        totalChecks: 0,
+        successfulChecks: 0,
+        failedChecks: 0,
+        averageResponseTimeMs: 0,
+      };
+    }
+
+    return {
+      totalChecks,
+      successfulChecks: Number(row?.successful_checks ?? 0),
+      failedChecks: Number(row?.failed_checks ?? 0),
+      averageResponseTimeMs: Number(row?.average_response_time_ms ?? 0),
+    };
+  }
+
+  async getLatestCheckStatusByMonitor(): Promise<MonitorLatestStatus[]> {
+    const result = await this.pool.query<{
+      monitor_id: string;
+      status: "up" | "down";
+    }>(
+      `
+        SELECT DISTINCT ON (monitor_id)
+          monitor_id,
+          status
+        FROM check_results
+        ORDER BY monitor_id, checked_at DESC
+      `,
+    );
+
+    return result.rows.map((row) => ({
+      monitorId: row.monitor_id,
+      status: row.status,
+    }));
   }
 }

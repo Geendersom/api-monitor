@@ -5,6 +5,16 @@ import type { MaintenanceWindow } from "../monitors/maintenance.js";
 import type { Incident } from "../monitors/incidents.js";
 import type { CreateMonitorInput, Monitor } from "../monitors/types.js";
 
+export type MonitorLatestStatus = {
+  monitorId: string;
+  status: "up" | "down";
+};
+
+export type IncidentStatusCounts = {
+  open: number;
+  resolved: number;
+};
+
 export interface MonitorRepository {
   create(input: CreateMonitorInput): Promise<Monitor>;
   findAll(): Promise<Monitor[]>;
@@ -20,6 +30,11 @@ export interface CheckHistoryRepository {
     from: string,
     to: string,
   ): Promise<UptimeStatsAggregate>;
+  getOverallUptimeStats(
+    from: string,
+    to: string,
+  ): Promise<UptimeStatsAggregate>;
+  getLatestCheckStatusByMonitor(): Promise<MonitorLatestStatus[]>;
 }
 
 export interface IncidentRepository {
@@ -34,6 +49,7 @@ export interface IncidentRepository {
     resolvedAt: string,
   ): Promise<Incident | undefined>;
   findByMonitorId(monitorId: string): Promise<Incident[]>;
+  countByStatus(): Promise<IncidentStatusCounts>;
 }
 
 export interface AlertRepository {
@@ -47,6 +63,8 @@ export interface AlertRepository {
   listAll(): Promise<AlertEvent[]>;
   findByMonitorId(monitorId: string): Promise<AlertEvent[]>;
   findByIncidentId(incidentId: string): Promise<AlertEvent[]>;
+  countAll(): Promise<number>;
+  findRecent(limit: number): Promise<AlertEvent[]>;
 }
 
 export interface MaintenanceRepository {

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import type { IncidentRepository } from "../repositories/types.js";
+import type { IncidentStatusCounts } from "../repositories/types.js";
 import type { CheckResult } from "./history.js";
 
 export type Incident = {
@@ -74,6 +75,16 @@ export class IncidentStore implements IncidentRepository {
 
   async findByMonitorId(monitorId: string): Promise<Incident[]> {
     return [...(this.incidentsByMonitorId.get(monitorId) ?? [])];
+  }
+
+  async countByStatus(): Promise<IncidentStatusCounts> {
+    const incidents = Array.from(this.incidentsByMonitorId.values()).flat();
+
+    return {
+      open: incidents.filter((incident) => incident.status === "open").length,
+      resolved: incidents.filter((incident) => incident.status === "resolved")
+        .length,
+    };
   }
 }
 

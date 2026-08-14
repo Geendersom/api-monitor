@@ -93,6 +93,27 @@ export const buildMonitorUptime = (
   };
 };
 
+export const calculateUptimeMetricsFromAggregate = (
+  aggregate: UptimeStatsAggregate,
+): {
+  uptimePercentage: number;
+  averageResponseTimeMs: number;
+} => {
+  if (aggregate.totalChecks === 0) {
+    return {
+      uptimePercentage: 0,
+      averageResponseTimeMs: 0,
+    };
+  }
+
+  return {
+    uptimePercentage: roundToTwoDecimals(
+      (aggregate.successfulChecks / aggregate.totalChecks) * 100,
+    ),
+    averageResponseTimeMs: roundToTwoDecimals(aggregate.averageResponseTimeMs),
+  };
+};
+
 export const getMonitorUptime = async (
   monitorId: string,
   period: UptimePeriod,

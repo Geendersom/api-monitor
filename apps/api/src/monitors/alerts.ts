@@ -54,6 +54,20 @@ export class AlertStore implements AlertRepository {
   async findByIncidentId(incidentId: string): Promise<AlertEvent[]> {
     return this.alerts.filter((alert) => alert.incidentId === incidentId);
   }
+
+  async countAll(): Promise<number> {
+    return this.alerts.length;
+  }
+
+  async findRecent(limit: number): Promise<AlertEvent[]> {
+    return [...this.alerts]
+      .sort(
+        (left, right) =>
+          new Date(right.createdAt).getTime() -
+          new Date(left.createdAt).getTime(),
+      )
+      .slice(0, limit);
+  }
 }
 
 export const processIncidentAlerts = async (

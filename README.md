@@ -212,12 +212,12 @@ Retorna a avaliação de SLA do monitor no período solicitado, com base nos che
 
 ### Manutenção programada
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `POST` | `/monitors/:id/maintenance` | Cria janela de manutenção |
-| `GET` | `/monitors/:id/maintenance` | Lista janelas do monitor |
-| `GET` | `/monitors/:id/maintenance/active` | Retorna manutenção ativa no momento |
-| `DELETE` | `/monitors/:id/maintenance/:maintenanceId` | Remove janela de manutenção |
+| Método   | Rota                                       | Descrição                           |
+| -------- | ------------------------------------------ | ----------------------------------- |
+| `POST`   | `/monitors/:id/maintenance`                | Cria janela de manutenção           |
+| `GET`    | `/monitors/:id/maintenance`                | Lista janelas do monitor            |
+| `GET`    | `/monitors/:id/maintenance/active`         | Retorna manutenção ativa no momento |
+| `DELETE` | `/monitors/:id/maintenance/:maintenanceId` | Remove janela de manutenção         |
 
 Durante manutenção ativa, checks DOWN continuam sendo registrados, mas **não abrem incidentes nem alertas**.
 
