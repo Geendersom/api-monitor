@@ -4,6 +4,7 @@ import { AlertStore } from "./monitors/alerts.js";
 import type { HealthCheckOptions } from "./monitors/check.js";
 import { CheckHistoryStore } from "./monitors/history.js";
 import { IncidentStore } from "./monitors/incidents.js";
+import { MaintenanceStore } from "./monitors/maintenance-store.js";
 import { registerMonitorRoutes } from "./monitors/routes.js";
 import { MonitorScheduler } from "./monitors/scheduler.js";
 import { MonitorStore } from "./monitors/store.js";
@@ -16,6 +17,7 @@ type BuildAppOptions = {
   checkHistoryStore?: Repositories["checkHistoryRepository"];
   incidentStore?: Repositories["incidentRepository"];
   alertStore?: Repositories["alertRepository"];
+  maintenanceStore?: Repositories["maintenanceRepository"];
   healthCheck?: HealthCheckOptions;
   scheduler?: {
     intervalMs?: number;
@@ -40,6 +42,10 @@ const resolveRepositories = (options: BuildAppOptions): Repositories => ({
     options.repositories?.alertRepository ??
     options.alertStore ??
     new AlertStore(),
+  maintenanceRepository:
+    options.repositories?.maintenanceRepository ??
+    options.maintenanceStore ??
+    new MaintenanceStore(),
 });
 
 export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
@@ -55,6 +61,7 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
     checkHistoryRepository: repositories.checkHistoryRepository,
     incidentRepository: repositories.incidentRepository,
     alertRepository: repositories.alertRepository,
+    maintenanceRepository: repositories.maintenanceRepository,
     healthCheckOptions,
     ...(options.scheduler?.intervalMs !== undefined
       ? { intervalMs: options.scheduler.intervalMs }
@@ -90,6 +97,7 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
     repositories.checkHistoryRepository,
     repositories.incidentRepository,
     repositories.alertRepository,
+    repositories.maintenanceRepository,
     healthCheckOptions,
   );
 

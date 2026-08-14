@@ -3,6 +3,7 @@ import type {
   AlertRepository,
   CheckHistoryRepository,
   IncidentRepository,
+  MaintenanceRepository,
   MonitorRepository,
 } from "../repositories/types.js";
 import { runMonitorCheck } from "./run-check.js";
@@ -14,6 +15,7 @@ export type MonitorSchedulerOptions = {
   checkHistoryRepository: CheckHistoryRepository;
   incidentRepository: IncidentRepository;
   alertRepository: AlertRepository;
+  maintenanceRepository: MaintenanceRepository;
   healthCheckOptions?: HealthCheckOptions;
   intervalMs?: number;
 };
@@ -23,6 +25,7 @@ export class MonitorScheduler {
   private readonly checkHistoryRepository: CheckHistoryRepository;
   private readonly incidentRepository: IncidentRepository;
   private readonly alertRepository: AlertRepository;
+  private readonly maintenanceRepository: MaintenanceRepository;
   private readonly healthCheckOptions: HealthCheckOptions;
   private readonly intervalMs: number;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -34,6 +37,7 @@ export class MonitorScheduler {
     this.checkHistoryRepository = options.checkHistoryRepository;
     this.incidentRepository = options.incidentRepository;
     this.alertRepository = options.alertRepository;
+    this.maintenanceRepository = options.maintenanceRepository;
     this.healthCheckOptions = options.healthCheckOptions ?? {};
     this.intervalMs = options.intervalMs ?? DEFAULT_SCHEDULER_INTERVAL_MS;
   }
@@ -83,6 +87,7 @@ export class MonitorScheduler {
             this.checkHistoryRepository,
             this.incidentRepository,
             this.alertRepository,
+            this.maintenanceRepository,
             this.healthCheckOptions,
           );
         } catch {

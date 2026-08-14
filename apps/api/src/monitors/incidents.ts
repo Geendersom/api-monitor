@@ -18,6 +18,10 @@ export type IncidentProcessingResult = {
   resolvedIncident?: Incident;
 };
 
+export type ProcessMonitorResultOptions = {
+  inMaintenance?: boolean;
+};
+
 export const DEFAULT_INCIDENT_REASON = "Health check failed";
 
 export class IncidentStore implements IncidentRepository {
@@ -76,7 +80,12 @@ export class IncidentStore implements IncidentRepository {
 export const processMonitorResult = async (
   checkResult: CheckResult,
   incidentRepository: IncidentRepository,
+  options: ProcessMonitorResultOptions = {},
 ): Promise<IncidentProcessingResult> => {
+  if (options.inMaintenance) {
+    return {};
+  }
+
   if (checkResult.status === "down") {
     if (
       !(await incidentRepository.findOpenByMonitorId(checkResult.monitorId))

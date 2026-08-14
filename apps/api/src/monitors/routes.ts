@@ -4,9 +4,11 @@ import type {
   AlertRepository,
   CheckHistoryRepository,
   IncidentRepository,
+  MaintenanceRepository,
   MonitorRepository,
 } from "../repositories/types.js";
 import type { HealthCheckOptions } from "./check.js";
+import { validateCreateMaintenanceBody } from "./maintenance.js";
 import { runMonitorCheck } from "./run-check.js";
 import { calculateMonitorStats } from "./stats.js";
 import { getMonitorSla } from "./sla.js";
@@ -19,6 +21,7 @@ export const registerMonitorRoutes = (
   checkHistoryRepository: CheckHistoryRepository,
   incidentRepository: IncidentRepository,
   alertRepository: AlertRepository,
+  maintenanceRepository: MaintenanceRepository,
   healthCheckOptions: HealthCheckOptions = {},
 ): void => {
   app.post("/monitors", async (request, reply) => {
@@ -59,6 +62,7 @@ export const registerMonitorRoutes = (
         checkHistoryRepository,
         incidentRepository,
         alertRepository,
+        maintenanceRepository,
         healthCheckOptions,
       );
 
@@ -143,6 +147,107 @@ export const registerMonitorRoutes = (
       );
 
       return reply.status(200).send(sla);
+    },
+  );
+
+  app.post<{ Params: { id: string } }>(
+    "/monitors/:id/maintenance",
+    async (request, reply) => {
+      const monitor = await monitorRepository.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      const validation = validateCreateMaintenanceBody(request.body);
+
+      if (!validation.success) {
+        return reply.status(400).send({ error: validation.error });
+      }
+
+      const hasOverlap = await maintenanceRepository.hasOverlappingWindow(
+        monitor.id,
+        validation.data.startsAt,
+        validation.data.endsAt,
+      );
+
+      if (hasOverlap) {
+        return reply.status(409).send({
+          error: "Maintenance window overlaps with an existing window",
+        });
+      }
+
+      const maintenance = await maintenanceRepository.create({
+        monitorId: monitor.id,
+        ...validation.data,
+      });
+
+      return reply.status(201).send(maintenance);
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/monitors/:id/maintenance",
+    async (request, reply) => {
+      const monitor = await monitorRepository.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      return {
+        maintenance: await maintenanceRepository.findByMonitorId(monitor.id),
+      };
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/monitors/:id/maintenance/active",
+    async (request, reply) => {
+      const monitor = await monitorRepository.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      const maintenance = await maintenanceRepository.findActiveAt(
+        monitor.id,
+        new Date().toISOString(),
+      );
+
+      if (!maintenance) {
+        return {
+          active: false,
+          maintenance: null,
+        };
+      }
+
+      return {
+        active: true,
+        maintenance,
+      };
+    },
+  );
+
+  app.delete<{ Params: { id: string; maintenanceId: string } }>(
+    "/monitors/:id/maintenance/:maintenanceId",
+    async (request, reply) => {
+      const monitor = await monitorRepository.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      const deleted = await maintenanceRepository.delete(
+        monitor.id,
+        request.params.maintenanceId,
+      );
+
+      if (!deleted) {
+        return reply.status(404).send({ error: "Maintenance not found" });
+      }
+
+      return reply.status(204).send();
     },
   );
 

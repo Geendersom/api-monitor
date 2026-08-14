@@ -10,6 +10,7 @@ import type {
   AlertRepository,
   CheckHistoryRepository,
   IncidentRepository,
+  MaintenanceRepository,
 } from "../repositories/types.js";
 import type { Monitor } from "./types.js";
 
@@ -18,6 +19,7 @@ export const runMonitorCheck = async (
   checkHistoryRepository: CheckHistoryRepository,
   incidentRepository: IncidentRepository,
   alertRepository: AlertRepository,
+  maintenanceRepository: MaintenanceRepository,
   healthCheckOptions: HealthCheckOptions = {},
 ): Promise<HealthCheckResult> => {
   const result = await performHealthCheck(monitor.url, healthCheckOptions);
@@ -25,9 +27,16 @@ export const runMonitorCheck = async (
   const checkResult = await checkHistoryRepository.add(
     createCheckResult(monitor.id, result),
   );
+
+  const activeMaintenance = await maintenanceRepository.findActiveAt(
+    monitor.id,
+    checkResult.checkedAt,
+  );
+
   const incidentResult = await processMonitorResult(
     checkResult,
     incidentRepository,
+    { inMaintenance: activeMaintenance !== undefined },
   );
 
   await processIncidentAlerts(

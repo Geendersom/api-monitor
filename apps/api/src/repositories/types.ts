@@ -1,6 +1,7 @@
 import type { AlertEvent, AlertType } from "../monitors/alerts.js";
 import type { CheckResult } from "../monitors/history.js";
 import type { UptimeStatsAggregate } from "../monitors/uptime.js";
+import type { MaintenanceWindow } from "../monitors/maintenance.js";
 import type { Incident } from "../monitors/incidents.js";
 import type { CreateMonitorInput, Monitor } from "../monitors/types.js";
 
@@ -48,9 +49,36 @@ export interface AlertRepository {
   findByIncidentId(incidentId: string): Promise<AlertEvent[]>;
 }
 
+export interface MaintenanceRepository {
+  create(input: {
+    monitorId: string;
+    title: string;
+    reason?: string;
+    startsAt: string;
+    endsAt: string;
+  }): Promise<MaintenanceWindow>;
+  findByMonitorId(monitorId: string): Promise<MaintenanceWindow[]>;
+  findById(
+    monitorId: string,
+    maintenanceId: string,
+  ): Promise<MaintenanceWindow | undefined>;
+  findActiveAt(
+    monitorId: string,
+    at: string,
+  ): Promise<MaintenanceWindow | undefined>;
+  hasOverlappingWindow(
+    monitorId: string,
+    startsAt: string,
+    endsAt: string,
+    excludeId?: string,
+  ): Promise<boolean>;
+  delete(monitorId: string, maintenanceId: string): Promise<boolean>;
+}
+
 export type Repositories = {
   monitorRepository: MonitorRepository;
   checkHistoryRepository: CheckHistoryRepository;
   incidentRepository: IncidentRepository;
   alertRepository: AlertRepository;
+  maintenanceRepository: MaintenanceRepository;
 };
