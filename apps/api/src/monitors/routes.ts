@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import type { HealthCheckOptions } from "./check.js";
 import type { CheckHistoryStore } from "./history.js";
 import { runMonitorCheck } from "./run-check.js";
+import { calculateMonitorStats } from "./stats.js";
 import type { MonitorStore } from "./store.js";
 import { validateCreateMonitorBody } from "./validation.js";
 
@@ -61,6 +62,21 @@ export const registerMonitorRoutes = (
       return {
         checks: historyStore.findByMonitorId(monitor.id),
       };
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/monitors/:id/stats",
+    async (request, reply) => {
+      const monitor = store.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      const checks = historyStore.findByMonitorId(monitor.id);
+
+      return calculateMonitorStats(monitor.id, checks);
     },
   );
 
