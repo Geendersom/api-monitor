@@ -53,10 +53,13 @@ export const AlertsPage = () => {
       {error ? <ErrorState message={error} onRetry={loadAlerts} /> : null}
 
       {data ? (
-        <RecentAlertsList
-          alerts={data.alerts}
-          monitorNames={data.monitorNames}
-        />
+        <div className="page-content page-content--fill">
+          <RecentAlertsList
+            alerts={data.alerts}
+            monitorNames={data.monitorNames}
+            fill
+          />
+        </div>
       ) : null}
     </AppLayout>
   );

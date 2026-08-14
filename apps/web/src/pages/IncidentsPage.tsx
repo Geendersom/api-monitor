@@ -58,7 +58,9 @@ export const IncidentsPage = () => {
       {error ? <ErrorState message={error} onRetry={loadIncidents} /> : null}
 
       {data ? (
-        <IncidentsPageList active={data.active} resolved={data.resolved} />
+        <div className="page-content page-content--fill">
+          <IncidentsPageList active={data.active} resolved={data.resolved} />
+        </div>
       ) : null}
     </AppLayout>
   );

@@ -52,7 +52,7 @@ export const AppLayout = ({
           ) : null)}
         <main className="app-main">
           <MockDataBanner visible={isMock} />
-          {children}
+          <div className="app-main__body">{children}</div>
         </main>
       </div>
     </div>

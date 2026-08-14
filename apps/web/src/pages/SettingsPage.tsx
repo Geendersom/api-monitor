@@ -50,7 +50,9 @@ export const SettingsPage = () => {
       {error ? <ErrorState message={error} onRetry={loadSettings} /> : null}
 
       {settings ? (
-        <SettingsPanel settings={settings} onChange={setSettings} />
+        <div className="page-content page-content--settings">
+          <SettingsPanel settings={settings} onChange={setSettings} />
+        </div>
       ) : null}
     </AppLayout>
   );

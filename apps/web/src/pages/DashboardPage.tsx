@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import {
+  DashboardMetricModals,
+  type DashboardMetricModal,
+} from "../components/dashboard/DashboardMetricModals.js";
 import { SystemStatusBanner } from "../components/dashboard/SystemStatusBanner.js";
 import { AppLayout } from "../components/layout/AppLayout.js";
 import { RecentAlertsList } from "../components/alerts/RecentAlertsList.js";
@@ -49,6 +53,8 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [isMock, setIsMock] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const [activeMetricModal, setActiveMetricModal] =
+    useState<DashboardMetricModal>(null);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -117,17 +123,27 @@ export const DashboardPage = () => {
       {viewState === "empty" ? <EmptyState onRetry={loadDashboard} /> : null}
 
       {viewState === "success" && data ? (
-        <div className="dashboard-content">
+        <div className="page-content page-content--dashboard">
           <SystemStatusBanner downMonitors={data.overview.downMonitors} />
-          <MetricsGrid overview={data.overview} />
+          <MetricsGrid
+            overview={data.overview}
+            onOpenModal={setActiveMetricModal}
+          />
           <MonitorsTable monitors={data.monitors} />
           <div className="dashboard-split">
-            <ActiveIncidentsPanel monitors={data.monitors} />
+            <ActiveIncidentsPanel monitors={data.monitors} fill />
             <RecentAlertsList
               alerts={data.overview.recentAlerts}
               monitorNames={monitorNames}
+              fill
             />
           </div>
+          <DashboardMetricModals
+            activeModal={activeMetricModal}
+            data={data}
+            monitorNames={monitorNames}
+            onClose={() => setActiveMetricModal(null)}
+          />
         </div>
       ) : null}
     </AppLayout>

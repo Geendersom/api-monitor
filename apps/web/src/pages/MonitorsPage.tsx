@@ -59,7 +59,7 @@ export const MonitorsPage = () => {
       {error ? <ErrorState message={error} onRetry={loadMonitors} /> : null}
 
       {data ? (
-        <div className="page-content">
+        <div className="page-content page-content--fill">
           <MonitorsSummary summary={data.summary} />
           <MonitorsTable monitors={data.monitors} />
         </div>

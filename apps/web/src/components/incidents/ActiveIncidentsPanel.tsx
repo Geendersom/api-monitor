@@ -6,17 +6,22 @@ import { StatusIndicator } from "../monitors/StatusIndicator.js";
 
 type ActiveIncidentsPanelProps = {
   monitors: MonitorWithStatus[];
+  fill?: boolean;
 };
 
 export const ActiveIncidentsPanel = ({
   monitors,
+  fill = false,
 }: ActiveIncidentsPanelProps) => {
   const activeIncidents = monitors.filter(
     (monitor) => monitor.hasOpenIncident && monitor.openIncident,
   );
 
   return (
-    <section className="panel" aria-labelledby="incidents-title">
+    <section
+      className={`panel${fill ? " panel--fill" : ""}`}
+      aria-labelledby="incidents-title"
+    >
       <div className="panel__header">
         <div>
           <h2 id="incidents-title" className="panel__title">
