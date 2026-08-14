@@ -185,6 +185,31 @@ Retorna a disponibilidade histórica de um monitor no período solicitado, com b
 - `400` — `{ "error": "Invalid period" }` quando `period` está ausente ou é inválido
 - `404` — `{ "error": "Monitor not found" }` quando o monitor não existe
 
+### `GET /monitors/:id/sla?period=24h|7d|30d`
+
+Retorna a avaliação de SLA do monitor no período solicitado, com base nos checks reais registrados.
+
+**SLA padrão:** 99.9%
+
+**Resposta de exemplo:**
+
+```json
+{
+  "monitorId": "00000000-0000-0000-0000-000000000001",
+  "period": "30d",
+  "from": "2026-07-15T20:00:00.000Z",
+  "to": "2026-08-14T20:00:00.000Z",
+  "slaTargetPercentage": 99.9,
+  "uptimePercentage": 99.97,
+  "downtimeMs": 123456,
+  "allowedDowntimeMs": 2592000,
+  "exceededDowntimeMs": 0,
+  "status": "compliant"
+}
+```
+
+**Status possíveis:** `compliant` ou `breached`
+
 ## Development
 
 Comandos disponíveis na raiz do repositório:
