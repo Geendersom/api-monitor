@@ -2,6 +2,8 @@
 
 Plataforma open-source para monitoramento de APIs e disponibilidade — construída de forma transparente, colaborativa e extensível.
 
+![API Monitor — dashboard](./print-readme.png)
+
 ## Overview
 
 Manter APIs saudáveis exige visibilidade contínua sobre disponibilidade, tempo de resposta e falhas. O **API Monitor** nasce com a missão de oferecer uma solução open-source para acompanhar endpoints, detectar indisponibilidade e centralizar informações essenciais sobre a saúde das APIs.
