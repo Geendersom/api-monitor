@@ -11,6 +11,12 @@ app.get("/", async () => {
   };
 });
 
+app.get("/health", async () => {
+  return {
+    status: "ok",
+  };
+});
+
 const start = async () => {
   try {
     await app.listen({
