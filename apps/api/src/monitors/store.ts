@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
 
+import type { MonitorRepository } from "../repositories/types.js";
 import type { CreateMonitorInput, Monitor } from "./types.js";
 
-export class MonitorStore {
+export class MonitorStore implements MonitorRepository {
   private readonly monitors = new Map<string, Monitor>();
 
-  create(input: CreateMonitorInput): Monitor {
+  async create(input: CreateMonitorInput): Promise<Monitor> {
     const monitor: Monitor = {
       id: randomUUID(),
       name: input.name,
@@ -17,11 +18,11 @@ export class MonitorStore {
     return monitor;
   }
 
-  findAll(): Monitor[] {
+  async findAll(): Promise<Monitor[]> {
     return Array.from(this.monitors.values());
   }
 
-  findById(id: string): Monitor | undefined {
+  async findById(id: string): Promise<Monitor | undefined> {
     return this.monitors.get(id);
   }
 }

@@ -1,26 +1,28 @@
 import type { HealthCheckOptions } from "./check.js";
-import type { AlertStore } from "./alerts.js";
-import type { CheckHistoryStore } from "./history.js";
-import type { IncidentStore } from "./incidents.js";
+import type {
+  AlertRepository,
+  CheckHistoryRepository,
+  IncidentRepository,
+  MonitorRepository,
+} from "../repositories/types.js";
 import { runMonitorCheck } from "./run-check.js";
-import type { MonitorStore } from "./store.js";
 
 export const DEFAULT_SCHEDULER_INTERVAL_MS = 30_000;
 
 export type MonitorSchedulerOptions = {
-  monitorStore: MonitorStore;
-  checkHistoryStore: CheckHistoryStore;
-  incidentStore: IncidentStore;
-  alertStore: AlertStore;
+  monitorRepository: MonitorRepository;
+  checkHistoryRepository: CheckHistoryRepository;
+  incidentRepository: IncidentRepository;
+  alertRepository: AlertRepository;
   healthCheckOptions?: HealthCheckOptions;
   intervalMs?: number;
 };
 
 export class MonitorScheduler {
-  private readonly monitorStore: MonitorStore;
-  private readonly checkHistoryStore: CheckHistoryStore;
-  private readonly incidentStore: IncidentStore;
-  private readonly alertStore: AlertStore;
+  private readonly monitorRepository: MonitorRepository;
+  private readonly checkHistoryRepository: CheckHistoryRepository;
+  private readonly incidentRepository: IncidentRepository;
+  private readonly alertRepository: AlertRepository;
   private readonly healthCheckOptions: HealthCheckOptions;
   private readonly intervalMs: number;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -28,10 +30,10 @@ export class MonitorScheduler {
   private started = false;
 
   constructor(options: MonitorSchedulerOptions) {
-    this.monitorStore = options.monitorStore;
-    this.checkHistoryStore = options.checkHistoryStore;
-    this.incidentStore = options.incidentStore;
-    this.alertStore = options.alertStore;
+    this.monitorRepository = options.monitorRepository;
+    this.checkHistoryRepository = options.checkHistoryRepository;
+    this.incidentRepository = options.incidentRepository;
+    this.alertRepository = options.alertRepository;
     this.healthCheckOptions = options.healthCheckOptions ?? {};
     this.intervalMs = options.intervalMs ?? DEFAULT_SCHEDULER_INTERVAL_MS;
   }
@@ -72,15 +74,15 @@ export class MonitorScheduler {
     this.cycleInProgress = true;
 
     try {
-      const monitors = this.monitorStore.findAll();
+      const monitors = await this.monitorRepository.findAll();
 
       for (const monitor of monitors) {
         try {
           await runMonitorCheck(
             monitor,
-            this.checkHistoryStore,
-            this.incidentStore,
-            this.alertStore,
+            this.checkHistoryRepository,
+            this.incidentRepository,
+            this.alertRepository,
             this.healthCheckOptions,
           );
         } catch {

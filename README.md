@@ -19,7 +19,10 @@ A API backend já possui uma rota básica de verificação. Demais componentes �
 ### Atualmente disponível
 
 - API backend com Fastify 5
+- Persistência em PostgreSQL (monitores, checks, incidentes e alertas)
 - Rota `GET /` retornando status básico da aplicação
+- Monitores, health checks, histórico, métricas, incidentes e alertas
+- Scheduler automático de checks (intervalo padrão: 30 segundos)
 - Monorepo com npm workspaces
 - Configuração de ESLint e Prettier
 - Documentação e templates para contribuição open-source
@@ -47,6 +50,8 @@ Tecnologias utilizadas atualmente no repositório:
 | [npm 11](https://www.npmjs.com/)              | Gerenciador de pacotes e workspaces |
 | [TypeScript](https://www.typescriptlang.org/) | Tipagem estática                    |
 | [Fastify 5](https://fastify.dev/)             | Framework HTTP da API               |
+| [PostgreSQL](https://www.postgresql.org/)     | Persistência de dados               |
+| [pg](https://node-postgres.com/)              | Driver PostgreSQL para Node.js      |
 | [tsx](https://github.com/privatenumber/tsx)   | Execução da API em desenvolvimento  |
 | ES Modules                                    | Módulos na aplicação `apps/api`     |
 | [ESLint](https://eslint.org/)                 | Análise estática de código          |
@@ -77,6 +82,7 @@ api-monitor/
 
 - Node.js 24
 - npm 11
+- PostgreSQL 14+ (obrigatório para execução da API em produção/desenvolvimento com persistência)
 
 ### Instalação e execução
 
@@ -93,7 +99,23 @@ cd api-monitor
 npm install
 ```
 
-3. Inicie a API em modo de desenvolvimento:
+3. Configure o banco de dados:
+
+Use o arquivo `.env.example` como referência e exporte a variável de ambiente antes de executar a API:
+
+```bash
+export DATABASE_URL=postgresql://usuario:senha@localhost:5432/api_monitor
+```
+
+Ou crie um arquivo `.env` local (não versionado) e carregue-o com `--env-file` ao executar comandos Node.js 24+.
+
+4. Crie o schema do banco:
+
+```bash
+npm run migrate --workspace=api
+```
+
+5. Inicie a API em modo de desenvolvimento:
 
 ```bash
 npm run dev --workspace=api
@@ -105,6 +127,20 @@ Para testar a rota principal:
 
 ```bash
 curl http://127.0.0.1:3000/
+```
+
+### Testes
+
+Os testes unitários padrão **não exigem PostgreSQL**:
+
+```bash
+npm test
+```
+
+Para executar testes de integração com PostgreSQL (requer `DATABASE_URL` configurada):
+
+```bash
+npm run test:integration --workspace=api
 ```
 
 ## API
@@ -128,6 +164,7 @@ Comandos disponíveis na raiz do repositório:
 
 | Comando                | Descrição                                  |
 | ---------------------- | ------------------------------------------ |
+| `npm test`             | Executa os testes unitários da API         |
 | `npm run lint`         | Analisa o código com ESLint                |
 | `npm run format`       | Formata os arquivos com Prettier           |
 | `npm run format:check` | Verifica a formatação sem alterar arquivos |

@@ -35,22 +35,22 @@ describe("processMonitorResult", () => {
     incidentStore = new IncidentStore();
   });
 
-  it("does not create an incident for UP checks", () => {
-    processMonitorResult(
+  it("does not create an incident for UP checks", async () => {
+    await processMonitorResult(
       createCheck("up", "2026-08-14T18:00:00.000Z"),
       incidentStore,
     );
 
-    expect(incidentStore.findByMonitorId(monitorId)).toEqual([]);
+    expect(await incidentStore.findByMonitorId(monitorId)).toEqual([]);
   });
 
-  it("creates an open incident on the first DOWN check", () => {
-    processMonitorResult(
+  it("creates an open incident on the first DOWN check", async () => {
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:00.000Z"),
       incidentStore,
     );
 
-    const incidents = incidentStore.findByMonitorId(monitorId);
+    const incidents = await incidentStore.findByMonitorId(monitorId);
 
     expect(incidents).toHaveLength(1);
     expect(incidents[0]?.status).toBe("open");
@@ -60,76 +60,76 @@ describe("processMonitorResult", () => {
     expect(incidents[0]?.durationMs).toBeUndefined();
   });
 
-  it("does not create duplicate incidents for consecutive DOWN checks", () => {
-    processMonitorResult(
+  it("does not create duplicate incidents for consecutive DOWN checks", async () => {
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:00.000Z"),
       incidentStore,
     );
-    processMonitorResult(
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:30.000Z"),
       incidentStore,
     );
-    processMonitorResult(
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:01:00.000Z"),
       incidentStore,
     );
 
-    expect(incidentStore.findByMonitorId(monitorId)).toHaveLength(1);
+    expect(await incidentStore.findByMonitorId(monitorId)).toHaveLength(1);
   });
 
-  it("resolves an open incident on the first UP check", () => {
-    processMonitorResult(
+  it("resolves an open incident on the first UP check", async () => {
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:00.000Z"),
       incidentStore,
     );
-    processMonitorResult(
+    await processMonitorResult(
       createCheck("up", "2026-08-14T18:00:05.000Z"),
       incidentStore,
     );
 
-    const incident = incidentStore.findByMonitorId(monitorId)[0];
+    const incident = (await incidentStore.findByMonitorId(monitorId))[0];
 
     expect(incident?.status).toBe("resolved");
     expect(incident?.resolvedAt).toBe("2026-08-14T18:00:05.000Z");
     expect(incident?.durationMs).toBe(5000);
   });
 
-  it("creates two incidents for DOWN → UP → DOWN", () => {
-    processMonitorResult(
+  it("creates two incidents for DOWN → UP → DOWN", async () => {
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:00.000Z"),
       incidentStore,
     );
-    processMonitorResult(
+    await processMonitorResult(
       createCheck("up", "2026-08-14T18:00:10.000Z"),
       incidentStore,
     );
-    processMonitorResult(
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:20.000Z"),
       incidentStore,
     );
 
-    const incidents = incidentStore.findByMonitorId(monitorId);
+    const incidents = await incidentStore.findByMonitorId(monitorId);
 
     expect(incidents).toHaveLength(2);
     expect(incidents[0]?.status).toBe("resolved");
     expect(incidents[1]?.status).toBe("open");
   });
 
-  it("keeps incidents isolated by monitor", () => {
-    processMonitorResult(
+  it("keeps incidents isolated by monitor", async () => {
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:00.000Z", monitorId),
       incidentStore,
     );
-    processMonitorResult(
+    await processMonitorResult(
       createCheck("down", "2026-08-14T18:00:00.000Z", otherMonitorId),
       incidentStore,
     );
 
-    expect(incidentStore.findByMonitorId(monitorId)).toHaveLength(1);
-    expect(incidentStore.findByMonitorId(otherMonitorId)).toHaveLength(1);
+    expect(await incidentStore.findByMonitorId(monitorId)).toHaveLength(1);
+    expect(await incidentStore.findByMonitorId(otherMonitorId)).toHaveLength(1);
   });
 
-  it("maintains the correct lifecycle across multiple UP/DOWN cycles", () => {
+  it("maintains the correct lifecycle across multiple UP/DOWN cycles", async () => {
     const sequence: Array<{ status: "up" | "down"; at: string }> = [
       { status: "up", at: "2026-08-14T18:00:00.000Z" },
       { status: "down", at: "2026-08-14T18:00:10.000Z" },
@@ -141,10 +141,13 @@ describe("processMonitorResult", () => {
     ];
 
     for (const step of sequence) {
-      processMonitorResult(createCheck(step.status, step.at), incidentStore);
+      await processMonitorResult(
+        createCheck(step.status, step.at),
+        incidentStore,
+      );
     }
 
-    const incidents = incidentStore.findByMonitorId(monitorId);
+    const incidents = await incidentStore.findByMonitorId(monitorId);
 
     expect(incidents).toHaveLength(2);
     expect(incidents.every((incident) => incident.status === "resolved")).toBe(
@@ -347,7 +350,7 @@ describe("runMonitorCheck incident integration", () => {
       statusCode = 500;
       await app.monitorScheduler.runCycle();
 
-      const incidents = incidentStore.findByMonitorId(monitorIdValue);
+      const incidents = await incidentStore.findByMonitorId(monitorIdValue);
 
       expect(incidents).toHaveLength(2);
       expect(incidents[0]?.status).toBe("resolved");

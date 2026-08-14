@@ -26,15 +26,15 @@ const createCheck = (
   checkedAt,
 });
 
-const processSequence = (
+const processSequence = async (
   checks: CheckResult[],
   incidentStore: IncidentStore,
   alertStore: AlertStore,
 ) => {
   for (const check of checks) {
-    const incidentResult = processMonitorResult(check, incidentStore);
+    const incidentResult = await processMonitorResult(check, incidentStore);
 
-    processIncidentAlerts(incidentResult, alertStore, check.checkedAt);
+    await processIncidentAlerts(incidentResult, alertStore, check.checkedAt);
   }
 };
 
@@ -47,19 +47,21 @@ describe("Alert Engine", () => {
     alertStore = new AlertStore();
   });
 
-  it("creates an incident_opened alert when a DOWN opens an incident", () => {
+  it("creates an incident_opened alert when a DOWN opens an incident", async () => {
     const check = createCheck("down", "2026-08-14T18:00:00.000Z");
-    const incidentResult = processMonitorResult(check, incidentStore);
+    const incidentResult = await processMonitorResult(check, incidentStore);
 
-    processIncidentAlerts(incidentResult, alertStore, check.checkedAt);
+    await processIncidentAlerts(incidentResult, alertStore, check.checkedAt);
 
-    expect(alertStore.listAll()).toHaveLength(1);
-    expect(alertStore.listAll()[0]?.type).toBe("incident_opened");
-    expect(alertStore.listAll()[0]?.message).toBe("Monitor incident opened");
+    const alerts = await alertStore.listAll();
+
+    expect(alerts).toHaveLength(1);
+    expect(alerts[0]?.type).toBe("incident_opened");
+    expect(alerts[0]?.message).toBe("Monitor incident opened");
   });
 
-  it("does not create duplicate alerts for consecutive DOWN checks", () => {
-    processSequence(
+  it("does not create duplicate alerts for consecutive DOWN checks", async () => {
+    await processSequence(
       [
         createCheck("down", "2026-08-14T18:00:00.000Z"),
         createCheck("down", "2026-08-14T18:00:30.000Z"),
@@ -69,11 +71,11 @@ describe("Alert Engine", () => {
       alertStore,
     );
 
-    expect(alertStore.listAll()).toHaveLength(1);
+    expect(await alertStore.listAll()).toHaveLength(1);
   });
 
-  it("creates an incident_resolved alert when UP resolves an incident", () => {
-    processSequence(
+  it("creates an incident_resolved alert when UP resolves an incident", async () => {
+    await processSequence(
       [
         createCheck("down", "2026-08-14T18:00:00.000Z"),
         createCheck("up", "2026-08-14T18:00:05.000Z"),
@@ -82,13 +84,15 @@ describe("Alert Engine", () => {
       alertStore,
     );
 
-    expect(alertStore.listAll()).toHaveLength(2);
-    expect(alertStore.listAll()[1]?.type).toBe("incident_resolved");
-    expect(alertStore.listAll()[1]?.message).toBe("Monitor incident resolved");
+    const alerts = await alertStore.listAll();
+
+    expect(alerts).toHaveLength(2);
+    expect(alerts[1]?.type).toBe("incident_resolved");
+    expect(alerts[1]?.message).toBe("Monitor incident resolved");
   });
 
-  it("creates the correct alerts for DOWN → UP → DOWN", () => {
-    processSequence(
+  it("creates the correct alerts for DOWN → UP → DOWN", async () => {
+    await processSequence(
       [
         createCheck("down", "2026-08-14T18:00:00.000Z"),
         createCheck("up", "2026-08-14T18:00:10.000Z"),
@@ -98,7 +102,7 @@ describe("Alert Engine", () => {
       alertStore,
     );
 
-    const alerts = alertStore.listAll();
+    const alerts = await alertStore.listAll();
 
     expect(alerts).toHaveLength(3);
     expect(alerts.map((alert) => alert.type)).toEqual([
@@ -108,24 +112,24 @@ describe("Alert Engine", () => {
     ]);
   });
 
-  it("keeps alerts isolated by monitor", () => {
-    processSequence(
+  it("keeps alerts isolated by monitor", async () => {
+    await processSequence(
       [createCheck("down", "2026-08-14T18:00:00.000Z", monitorId)],
       incidentStore,
       alertStore,
     );
-    processSequence(
+    await processSequence(
       [createCheck("down", "2026-08-14T18:00:00.000Z", otherMonitorId)],
       incidentStore,
       alertStore,
     );
 
-    expect(alertStore.findByMonitorId(monitorId)).toHaveLength(1);
-    expect(alertStore.findByMonitorId(otherMonitorId)).toHaveLength(1);
+    expect(await alertStore.findByMonitorId(monitorId)).toHaveLength(1);
+    expect(await alertStore.findByMonitorId(otherMonitorId)).toHaveLength(1);
   });
 
-  it("creates alerts with unique ids", () => {
-    processSequence(
+  it("creates alerts with unique ids", async () => {
+    await processSequence(
       [
         createCheck("down", "2026-08-14T18:00:00.000Z"),
         createCheck("up", "2026-08-14T18:00:10.000Z"),
@@ -135,25 +139,25 @@ describe("Alert Engine", () => {
       alertStore,
     );
 
-    const ids = alertStore.listAll().map((alert) => alert.id);
+    const ids = (await alertStore.listAll()).map((alert) => alert.id);
 
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("creates alerts with valid ISO 8601 createdAt values", () => {
-    processSequence(
+  it("creates alerts with valid ISO 8601 createdAt values", async () => {
+    await processSequence(
       [createCheck("down", "2026-08-14T18:00:00.000Z")],
       incidentStore,
       alertStore,
     );
 
-    expect(alertStore.listAll()[0]?.createdAt).toMatch(
+    expect((await alertStore.listAll())[0]?.createdAt).toMatch(
       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/,
     );
   });
 
-  it("uses only supported alert types", () => {
-    processSequence(
+  it("uses only supported alert types", async () => {
+    await processSequence(
       [
         createCheck("down", "2026-08-14T18:00:00.000Z"),
         createCheck("up", "2026-08-14T18:00:10.000Z"),
@@ -162,7 +166,7 @@ describe("Alert Engine", () => {
       alertStore,
     );
 
-    for (const alert of alertStore.listAll()) {
+    for (const alert of await alertStore.listAll()) {
       expect(["incident_opened", "incident_resolved"]).toContain(alert.type);
     }
   });

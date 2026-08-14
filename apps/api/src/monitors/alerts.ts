@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import type { AlertRepository } from "../repositories/types.js";
 import type { IncidentProcessingResult } from "./incidents.js";
 
 export type AlertType = "incident_opened" | "incident_resolved";
@@ -18,16 +19,16 @@ const ALERT_MESSAGES: Record<AlertType, string> = {
   incident_resolved: "Monitor incident resolved",
 };
 
-export class AlertStore {
+export class AlertStore implements AlertRepository {
   private readonly alerts: AlertEvent[] = [];
 
-  add(input: {
+  async add(input: {
     monitorId: string;
     incidentId: string;
     type: AlertType;
     createdAt: string;
     message?: string;
-  }): AlertEvent {
+  }): Promise<AlertEvent> {
     const alert: AlertEvent = {
       id: randomUUID(),
       monitorId: input.monitorId,
@@ -42,26 +43,26 @@ export class AlertStore {
     return alert;
   }
 
-  listAll(): AlertEvent[] {
+  async listAll(): Promise<AlertEvent[]> {
     return [...this.alerts];
   }
 
-  findByMonitorId(monitorId: string): AlertEvent[] {
+  async findByMonitorId(monitorId: string): Promise<AlertEvent[]> {
     return this.alerts.filter((alert) => alert.monitorId === monitorId);
   }
 
-  findByIncidentId(incidentId: string): AlertEvent[] {
+  async findByIncidentId(incidentId: string): Promise<AlertEvent[]> {
     return this.alerts.filter((alert) => alert.incidentId === incidentId);
   }
 }
 
-export const processIncidentAlerts = (
+export const processIncidentAlerts = async (
   result: IncidentProcessingResult,
-  alertStore: AlertStore,
+  alertRepository: AlertRepository,
   createdAt: string,
-): void => {
+): Promise<void> => {
   if (result.openedIncident) {
-    alertStore.add({
+    await alertRepository.add({
       monitorId: result.openedIncident.monitorId,
       incidentId: result.openedIncident.id,
       type: "incident_opened",
@@ -70,7 +71,7 @@ export const processIncidentAlerts = (
   }
 
   if (result.resolvedIncident) {
-    alertStore.add({
+    await alertRepository.add({
       monitorId: result.resolvedIncident.monitorId,
       incidentId: result.resolvedIncident.id,
       type: "incident_resolved",

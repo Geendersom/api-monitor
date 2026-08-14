@@ -7,36 +7,54 @@ import { IncidentStore } from "./monitors/incidents.js";
 import { registerMonitorRoutes } from "./monitors/routes.js";
 import { MonitorScheduler } from "./monitors/scheduler.js";
 import { MonitorStore } from "./monitors/store.js";
+import type { Repositories } from "./repositories/types.js";
 
 type BuildAppOptions = {
   logger?: boolean;
-  monitorStore?: MonitorStore;
-  checkHistoryStore?: CheckHistoryStore;
-  incidentStore?: IncidentStore;
-  alertStore?: AlertStore;
+  repositories?: Partial<Repositories>;
+  monitorStore?: Repositories["monitorRepository"];
+  checkHistoryStore?: Repositories["checkHistoryRepository"];
+  incidentStore?: Repositories["incidentRepository"];
+  alertStore?: Repositories["alertRepository"];
   healthCheck?: HealthCheckOptions;
   scheduler?: {
     intervalMs?: number;
   };
+  onClose?: () => Promise<void>;
 };
+
+const resolveRepositories = (options: BuildAppOptions): Repositories => ({
+  monitorRepository:
+    options.repositories?.monitorRepository ??
+    options.monitorStore ??
+    new MonitorStore(),
+  checkHistoryRepository:
+    options.repositories?.checkHistoryRepository ??
+    options.checkHistoryStore ??
+    new CheckHistoryStore(),
+  incidentRepository:
+    options.repositories?.incidentRepository ??
+    options.incidentStore ??
+    new IncidentStore(),
+  alertRepository:
+    options.repositories?.alertRepository ??
+    options.alertStore ??
+    new AlertStore(),
+});
 
 export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
   const app = Fastify({
     logger: options.logger ?? false,
   });
 
-  const monitorStore = options.monitorStore ?? new MonitorStore();
-  const checkHistoryStore =
-    options.checkHistoryStore ?? new CheckHistoryStore();
-  const incidentStore = options.incidentStore ?? new IncidentStore();
-  const alertStore = options.alertStore ?? new AlertStore();
+  const repositories = resolveRepositories(options);
   const healthCheckOptions = options.healthCheck ?? {};
 
   const monitorScheduler = new MonitorScheduler({
-    monitorStore,
-    checkHistoryStore,
-    incidentStore,
-    alertStore,
+    monitorRepository: repositories.monitorRepository,
+    checkHistoryRepository: repositories.checkHistoryRepository,
+    incidentRepository: repositories.incidentRepository,
+    alertRepository: repositories.alertRepository,
     healthCheckOptions,
     ...(options.scheduler?.intervalMs !== undefined
       ? { intervalMs: options.scheduler.intervalMs }
@@ -47,6 +65,10 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
 
   app.addHook("onClose", async () => {
     monitorScheduler.stop();
+
+    if (options.onClose) {
+      await options.onClose();
+    }
   });
 
   app.get("/", async () => {
@@ -64,10 +86,10 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
 
   registerMonitorRoutes(
     app,
-    monitorStore,
-    checkHistoryStore,
-    incidentStore,
-    alertStore,
+    repositories.monitorRepository,
+    repositories.checkHistoryRepository,
+    repositories.incidentRepository,
+    repositories.alertRepository,
     healthCheckOptions,
   );
 

@@ -3,24 +3,38 @@ import {
   type HealthCheckOptions,
   type HealthCheckResult,
 } from "./check.js";
-import { processIncidentAlerts, type AlertStore } from "./alerts.js";
-import { createCheckResult, type CheckHistoryStore } from "./history.js";
-import { processMonitorResult, type IncidentStore } from "./incidents.js";
+import { processIncidentAlerts } from "./alerts.js";
+import { createCheckResult } from "./history.js";
+import { processMonitorResult } from "./incidents.js";
+import type {
+  AlertRepository,
+  CheckHistoryRepository,
+  IncidentRepository,
+} from "../repositories/types.js";
 import type { Monitor } from "./types.js";
 
 export const runMonitorCheck = async (
   monitor: Monitor,
-  historyStore: CheckHistoryStore,
-  incidentStore: IncidentStore,
-  alertStore: AlertStore,
+  checkHistoryRepository: CheckHistoryRepository,
+  incidentRepository: IncidentRepository,
+  alertRepository: AlertRepository,
   healthCheckOptions: HealthCheckOptions = {},
 ): Promise<HealthCheckResult> => {
   const result = await performHealthCheck(monitor.url, healthCheckOptions);
 
-  const checkResult = historyStore.add(createCheckResult(monitor.id, result));
-  const incidentResult = processMonitorResult(checkResult, incidentStore);
+  const checkResult = await checkHistoryRepository.add(
+    createCheckResult(monitor.id, result),
+  );
+  const incidentResult = await processMonitorResult(
+    checkResult,
+    incidentRepository,
+  );
 
-  processIncidentAlerts(incidentResult, alertStore, checkResult.checkedAt);
+  await processIncidentAlerts(
+    incidentResult,
+    alertRepository,
+    checkResult.checkedAt,
+  );
 
   return result;
 };

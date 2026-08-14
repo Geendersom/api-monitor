@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import type { CheckHistoryRepository } from "../repositories/types.js";
 import type { HealthCheckResult } from "./check.js";
 
 export type CheckResult = {
@@ -35,10 +36,10 @@ export const createCheckResult = (
   return record;
 };
 
-export class CheckHistoryStore {
+export class CheckHistoryStore implements CheckHistoryRepository {
   private readonly checksByMonitorId = new Map<string, CheckResult[]>();
 
-  add(result: CheckResult): CheckResult {
+  async add(result: CheckResult): Promise<CheckResult> {
     const monitorChecks = this.checksByMonitorId.get(result.monitorId) ?? [];
 
     monitorChecks.push(result);
@@ -47,11 +48,11 @@ export class CheckHistoryStore {
     return result;
   }
 
-  findByMonitorId(monitorId: string): CheckResult[] {
+  async findByMonitorId(monitorId: string): Promise<CheckResult[]> {
     return this.checksByMonitorId.get(monitorId) ?? [];
   }
 
-  listAll(): CheckResult[] {
+  async listAll(): Promise<CheckResult[]> {
     return Array.from(this.checksByMonitorId.values()).flat();
   }
 }

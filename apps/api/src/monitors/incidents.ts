@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import type { IncidentRepository } from "../repositories/types.js";
 import type { CheckResult } from "./history.js";
 
 export type Incident = {
@@ -19,14 +20,14 @@ export type IncidentProcessingResult = {
 
 export const DEFAULT_INCIDENT_REASON = "Health check failed";
 
-export class IncidentStore {
+export class IncidentStore implements IncidentRepository {
   private readonly incidentsByMonitorId = new Map<string, Incident[]>();
 
-  create(input: {
+  async create(input: {
     monitorId: string;
     startedAt: string;
     reason?: string;
-  }): Incident {
+  }): Promise<Incident> {
     const incident: Incident = {
       id: randomUUID(),
       monitorId: input.monitorId,
@@ -43,17 +44,17 @@ export class IncidentStore {
     return incident;
   }
 
-  findOpenByMonitorId(monitorId: string): Incident | undefined {
+  async findOpenByMonitorId(monitorId: string): Promise<Incident | undefined> {
     const incidents = this.incidentsByMonitorId.get(monitorId) ?? [];
 
     return incidents.find((incident) => incident.status === "open");
   }
 
-  resolveOpenIncident(
+  async resolveOpenIncident(
     monitorId: string,
     resolvedAt: string,
-  ): Incident | undefined {
-    const incident = this.findOpenByMonitorId(monitorId);
+  ): Promise<Incident | undefined> {
+    const incident = await this.findOpenByMonitorId(monitorId);
 
     if (!incident) {
       return undefined;
@@ -67,19 +68,21 @@ export class IncidentStore {
     return incident;
   }
 
-  findByMonitorId(monitorId: string): Incident[] {
+  async findByMonitorId(monitorId: string): Promise<Incident[]> {
     return [...(this.incidentsByMonitorId.get(monitorId) ?? [])];
   }
 }
 
-export const processMonitorResult = (
+export const processMonitorResult = async (
   checkResult: CheckResult,
-  incidentStore: IncidentStore,
-): IncidentProcessingResult => {
+  incidentRepository: IncidentRepository,
+): Promise<IncidentProcessingResult> => {
   if (checkResult.status === "down") {
-    if (!incidentStore.findOpenByMonitorId(checkResult.monitorId)) {
+    if (
+      !(await incidentRepository.findOpenByMonitorId(checkResult.monitorId))
+    ) {
       return {
-        openedIncident: incidentStore.create({
+        openedIncident: await incidentRepository.create({
           monitorId: checkResult.monitorId,
           startedAt: checkResult.checkedAt,
         }),
@@ -89,7 +92,7 @@ export const processMonitorResult = (
     return {};
   }
 
-  const resolvedIncident = incidentStore.resolveOpenIncident(
+  const resolvedIncident = await incidentRepository.resolveOpenIncident(
     checkResult.monitorId,
     checkResult.checkedAt,
   );

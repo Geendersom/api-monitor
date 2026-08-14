@@ -165,13 +165,13 @@ describe("GET /monitors/:id/stats", () => {
       "https://example.com/health",
     );
 
-    checkHistoryStore.add(
+    await checkHistoryStore.add(
       createCheck(monitor.id, { status: "up", responseTimeMs: 100 }),
     );
-    checkHistoryStore.add(
+    await checkHistoryStore.add(
       createCheck(monitor.id, { status: "up", responseTimeMs: 200 }),
     );
-    checkHistoryStore.add(
+    await checkHistoryStore.add(
       createCheck(monitor.id, { status: "down", responseTimeMs: 300 }),
     );
 
@@ -195,10 +195,10 @@ describe("GET /monitors/:id/stats", () => {
     const monitorA = await createMonitor("Monitor A", "https://example.com/a");
     const monitorB = await createMonitor("Monitor B", "https://example.com/b");
 
-    checkHistoryStore.add(
+    await checkHistoryStore.add(
       createCheck(monitorA.id, { status: "up", responseTimeMs: 100 }),
     );
-    checkHistoryStore.add(
+    await checkHistoryStore.add(
       createCheck(monitorB.id, { status: "down", responseTimeMs: 500 }),
     );
 
@@ -223,8 +223,12 @@ describe("GET /monitors/:id/stats", () => {
       "https://example.com/health",
     );
 
-    checkHistoryStore.add(createCheck(monitor.id, { responseTimeMs: 120 }));
-    checkHistoryStore.add(createCheck(monitor.id, { responseTimeMs: 180 }));
+    await checkHistoryStore.add(
+      createCheck(monitor.id, { responseTimeMs: 120 }),
+    );
+    await checkHistoryStore.add(
+      createCheck(monitor.id, { responseTimeMs: 180 }),
+    );
 
     const response = await app.inject({
       method: "GET",
