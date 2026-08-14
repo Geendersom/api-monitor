@@ -1,12 +1,14 @@
 import type { FastifyInstance } from "fastify";
 
 import { performHealthCheck, type HealthCheckOptions } from "./check.js";
+import { createCheckResult, type CheckHistoryStore } from "./history.js";
 import type { MonitorStore } from "./store.js";
 import { validateCreateMonitorBody } from "./validation.js";
 
 export const registerMonitorRoutes = (
   app: FastifyInstance,
   store: MonitorStore,
+  historyStore: CheckHistoryStore,
   healthCheckOptions: HealthCheckOptions = {},
 ): void => {
   app.post("/monitors", async (request, reply) => {
@@ -38,7 +40,24 @@ export const registerMonitorRoutes = (
 
       const result = await performHealthCheck(monitor.url, healthCheckOptions);
 
+      historyStore.add(createCheckResult(monitor.id, result));
+
       return reply.status(200).send(result);
+    },
+  );
+
+  app.get<{ Params: { id: string } }>(
+    "/monitors/:id/checks",
+    async (request, reply) => {
+      const monitor = store.findById(request.params.id);
+
+      if (!monitor) {
+        return reply.status(404).send({ error: "Monitor not found" });
+      }
+
+      return {
+        checks: historyStore.findByMonitorId(monitor.id),
+      };
     },
   );
 
