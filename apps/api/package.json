@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx src/server.ts"
+    "dev": "tsx src/server.ts",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +13,7 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^26.2.0",
-    "tsx": "^4.23.12"
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "fastify": "^5.12.0"

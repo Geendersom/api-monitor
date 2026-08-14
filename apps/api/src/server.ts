@@ -1,23 +1,8 @@
-import Fastify from "fastify";
-
-const app = Fastify({
-  logger: true,
-});
-
-app.get("/", async () => {
-  return {
-    name: "API Monitor",
-    status: "online",
-  };
-});
-
-app.get("/health", async () => {
-  return {
-    status: "ok",
-  };
-});
+import { buildApp } from "./app.js";
 
 const start = async () => {
+  const app = buildApp({ logger: true });
+
   try {
     await app.listen({
       port: 3000,
