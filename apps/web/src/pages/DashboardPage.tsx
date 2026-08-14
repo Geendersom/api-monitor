@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { DashboardLayout } from "../components/layout/DashboardLayout.js";
+import { AppLayout } from "../components/layout/AppLayout.js";
+import { DashboardHeader } from "../components/layout/DashboardHeader.js";
 import { RecentAlertsList } from "../components/alerts/RecentAlertsList.js";
 import { ActiveIncidentsPanel } from "../components/incidents/ActiveIncidentsPanel.js";
 import { MetricsGrid } from "../components/metrics/MetricsGrid.js";
@@ -85,10 +86,15 @@ export const DashboardPage = () => {
   }, [data]);
 
   return (
-    <DashboardLayout
-      lastUpdatedAt={lastUpdatedAt}
-      onRefresh={loadDashboard}
-      refreshing={loading}
+    <AppLayout
+      header={({ onMenuToggle }) => (
+        <DashboardHeader
+          lastUpdatedAt={lastUpdatedAt}
+          onRefresh={loadDashboard}
+          refreshing={loading}
+          onMenuToggle={onMenuToggle}
+        />
+      )}
     >
       {viewState === "loading" ? <LoadingState /> : null}
 
@@ -114,6 +120,6 @@ export const DashboardPage = () => {
           </div>
         </div>
       ) : null}
-    </DashboardLayout>
+    </AppLayout>
   );
 };

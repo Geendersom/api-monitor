@@ -3,7 +3,7 @@ import {
   formatDateTime,
   formatDuration,
   formatRelativeTime,
-} from "../../services/dashboard-service.js";
+} from "../../services/formatters.js";
 
 type ActiveIncidentsPanelProps = {
   monitors: MonitorWithStatus[];

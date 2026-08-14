@@ -1,21 +1,31 @@
-import { formatRelativeTime } from "../../services/formatters.js";
+import { Link } from "react-router-dom";
 
-type DashboardHeaderProps = {
+import type { Monitor, MonitorStatus } from "../../types/api.js";
+import { formatRelativeTime } from "../../services/formatters.js";
+import { StatusIndicator } from "./StatusIndicator.js";
+
+type MonitorHeaderProps = {
+  monitor: Monitor;
+  status: MonitorStatus;
   lastUpdatedAt: string | null;
-  onRefresh: () => void;
   refreshing: boolean;
+  onRefresh: () => void;
   onMenuToggle: () => void;
+  inMaintenance: boolean;
 };
 
-export const DashboardHeader = ({
+export const MonitorHeader = ({
+  monitor,
+  status,
   lastUpdatedAt,
-  onRefresh,
   refreshing,
+  onRefresh,
   onMenuToggle,
-}: DashboardHeaderProps) => {
+  inMaintenance,
+}: MonitorHeaderProps) => {
   return (
-    <header className="dashboard-header">
-      <div className="dashboard-header__main">
+    <header className="dashboard-header monitor-header">
+      <div className="dashboard-header__main monitor-header__main">
         <button
           type="button"
           className="dashboard-header__menu"
@@ -26,11 +36,18 @@ export const DashboardHeader = ({
           <span aria-hidden="true" />
           <span aria-hidden="true" />
         </button>
-        <div>
-          <h1 className="dashboard-header__title">Dashboard</h1>
-          <p className="dashboard-header__subtitle">
-            Visão geral da saúde dos seus monitores.
-          </p>
+        <div className="monitor-header__content">
+          <Link to="/" className="monitor-header__back">
+            ← Voltar
+          </Link>
+          <div className="monitor-header__title-row">
+            <h1 className="dashboard-header__title">{monitor.name}</h1>
+            <StatusIndicator status={status} />
+          </div>
+          <p className="monitor-header__url">{monitor.url}</p>
+          {inMaintenance ? (
+            <p className="monitor-header__maintenance">Em manutenção</p>
+          ) : null}
         </div>
       </div>
 

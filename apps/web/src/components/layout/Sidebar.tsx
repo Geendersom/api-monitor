@@ -1,14 +1,16 @@
+import { NavLink } from "react-router-dom";
+
 type SidebarProps = {
   open: boolean;
   onClose: () => void;
 };
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", active: true },
-  { id: "monitors", label: "Monitores", active: false },
-  { id: "incidents", label: "Incidentes", active: false },
-  { id: "alerts", label: "Alertas", active: false },
-  { id: "settings", label: "Configurações", active: false },
+  { to: "/", label: "Dashboard", end: true },
+  { to: "/", label: "Monitores", end: false },
+  { to: "/", label: "Incidentes", end: false },
+  { to: "/", label: "Alertas", end: false },
+  { to: "/", label: "Configurações", end: false },
 ];
 
 export const Sidebar = ({ open, onClose }: SidebarProps) => {
@@ -36,13 +38,17 @@ export const Sidebar = ({ open, onClose }: SidebarProps) => {
 
         <nav className="sidebar__nav">
           {NAV_ITEMS.map((item) => (
-            <span
-              key={item.id}
-              className={`sidebar__link${item.active ? " sidebar__link--active" : " sidebar__link--muted"}`}
-              aria-current={item.active ? "page" : undefined}
+            <NavLink
+              key={item.label}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `sidebar__link${isActive && item.end ? " sidebar__link--active" : " sidebar__link--muted"}`
+              }
+              onClick={onClose}
             >
               {item.label}
-            </span>
+            </NavLink>
           ))}
         </nav>
 

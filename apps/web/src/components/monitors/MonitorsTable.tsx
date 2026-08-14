@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
+
 import type { MonitorWithStatus } from "../../types/api.js";
 import {
   formatDuration,
   formatRelativeTime,
   formatMilliseconds,
-} from "../../services/dashboard-service.js";
+} from "../../services/formatters.js";
 import { StatusIndicator } from "./StatusIndicator.js";
 
 type MonitorsTableProps = {
@@ -11,6 +13,12 @@ type MonitorsTableProps = {
 };
 
 export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
+  const navigate = useNavigate();
+
+  const openMonitorDetails = (monitorId: string) => {
+    void navigate(`/monitors/${monitorId}`);
+  };
+
   return (
     <section className="panel" aria-labelledby="monitors-title">
       <div className="panel__header">
@@ -19,7 +27,7 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
             Status dos monitores
           </h2>
           <p className="panel__subtitle">
-            Leitura rápida do estado operacional atual
+            Clique em um monitor para ver detalhes completos
           </p>
         </div>
         <span className="panel__count">{monitors.length}</span>
@@ -43,9 +51,22 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
               {monitors.map((monitor) => (
                 <tr
                   key={monitor.id}
-                  className={
-                    monitor.hasOpenIncident ? "data-table__row--highlight" : ""
-                  }
+                  className={[
+                    monitor.hasOpenIncident ? "data-table__row--highlight" : "",
+                    "data-table__row--clickable",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  tabIndex={0}
+                  role="link"
+                  aria-label={`Ver detalhes de ${monitor.name}`}
+                  onClick={() => openMonitorDetails(monitor.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openMonitorDetails(monitor.id);
+                    }
+                  }}
                 >
                   <td>
                     <div className="monitor-cell">

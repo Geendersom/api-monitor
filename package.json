@@ -8,7 +8,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm test --workspace=api"
+    "test": "npm test --workspace=api && npm test --workspace=web"
   },
   "repository": {
     "type": "git",

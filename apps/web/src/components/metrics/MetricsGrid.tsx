@@ -2,7 +2,7 @@ import type { DashboardOverview } from "../../types/api.js";
 import {
   formatMilliseconds,
   formatPercentage,
-} from "../../services/dashboard-service.js";
+} from "../../services/formatters.js";
 import { MetricCard } from "./MetricCard.js";
 
 type MetricsGridProps = {

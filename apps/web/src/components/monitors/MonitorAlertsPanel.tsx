@@ -4,29 +4,25 @@ import {
   formatRelativeTime,
 } from "../../services/formatters.js";
 
-type RecentAlertsListProps = {
+type MonitorAlertsPanelProps = {
   alerts: AlertEvent[];
-  monitorNames: Record<string, string>;
 };
 
-export const RecentAlertsList = ({
-  alerts,
-  monitorNames,
-}: RecentAlertsListProps) => {
+export const MonitorAlertsPanel = ({ alerts }: MonitorAlertsPanelProps) => {
   return (
-    <section className="panel" aria-labelledby="recent-alerts-title">
+    <section className="panel" aria-labelledby="monitor-alerts-title">
       <div className="panel__header">
         <div>
-          <h2 id="recent-alerts-title" className="panel__title">
-            Alertas recentes
+          <h2 id="monitor-alerts-title" className="panel__title">
+            Alertas
           </h2>
-          <p className="panel__subtitle">Linha do tempo compacta de eventos</p>
+          <p className="panel__subtitle">Eventos recentes deste monitor</p>
         </div>
         <span className="panel__count">{alerts.length}</span>
       </div>
 
       {alerts.length === 0 ? (
-        <p className="panel__empty">Nenhum alerta recente.</p>
+        <p className="panel__empty">Nenhum alerta registrado.</p>
       ) : (
         <ul className="timeline-list">
           {alerts.map((alert) => (
@@ -50,9 +46,6 @@ export const RecentAlertsList = ({
                     {formatRelativeTime(alert.createdAt)}
                   </time>
                 </div>
-                <p className="timeline-list__monitor">
-                  {monitorNames[alert.monitorId] ?? alert.monitorId}
-                </p>
                 <p className="timeline-list__message">{alert.message}</p>
               </div>
             </li>

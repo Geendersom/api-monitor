@@ -68,6 +68,66 @@ export type DashboardData = {
   monitors: MonitorWithStatus[];
 };
 
+export type UptimePeriod = "24h" | "7d" | "30d";
+
+export const UPTIME_PERIODS: UptimePeriod[] = ["24h", "7d", "30d"];
+
+export type MonitorUptime = {
+  monitorId: string;
+  period: UptimePeriod;
+  from: string;
+  to: string;
+  totalChecks: number;
+  successfulChecks: number;
+  failedChecks: number;
+  uptimePercentage: number;
+  averageResponseTimeMs: number;
+};
+
+export type SlaStatus = "compliant" | "breached";
+
+export type MonitorSla = {
+  monitorId: string;
+  period: UptimePeriod;
+  from: string;
+  to: string;
+  slaTargetPercentage: number;
+  uptimePercentage: number;
+  downtimeMs: number;
+  allowedDowntimeMs: number;
+  exceededDowntimeMs: number;
+  status: SlaStatus;
+};
+
+export type MaintenanceWindow = {
+  id: string;
+  monitorId: string;
+  title: string;
+  reason?: string;
+  startsAt: string;
+  endsAt: string;
+  createdAt: string;
+};
+
+export type ActiveMaintenanceResponse = {
+  active: boolean;
+  maintenance: MaintenanceWindow | null;
+};
+
+export type MonitorDetailsData = {
+  monitor: Monitor;
+  status: MonitorStatus;
+  lastCheck?: CheckResult;
+  openIncident?: Incident;
+  uptime: MonitorUptime;
+  sla: MonitorSla;
+  checks: CheckResult[];
+  incidents: Incident[];
+  maintenance: MaintenanceWindow[];
+  activeMaintenance: ActiveMaintenanceResponse;
+  alerts: AlertEvent[];
+};
+
 export class ApiError extends Error {
   readonly status: number;
 
