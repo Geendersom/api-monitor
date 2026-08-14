@@ -1,0 +1,54 @@
+name: Feature Request
+description: Sugerir uma nova funcionalidade ou melhoria
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por sugerir uma melhoria. Descreva o problema e a proposta com o máximo de contexto possível.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema que a funcionalidade resolve
+      description: Qual necessidade, dor ou limitação esta funcionalidade endereça?
+      placeholder: "Ex.: Atualmente não há uma forma de..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Descrição da proposta
+      description: Descreva a funcionalidade sugerida e como ela deveria funcionar.
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Benefício
+      description: Como esta funcionalidade beneficia usuários ou contribuidores do projeto?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Existe alguma alternativa ou solução de contorno que você considerou?
+      placeholder: "Ex.: Poderia ser resolvido com..., mas..."
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmações
+      options:
+        - label: Esta sugestão está alinhada com o escopo open-source do API Monitor.
+          required: true
+        - label: Estou disposto(a) a contribuir com a implementação, se necessário.
+          required: false

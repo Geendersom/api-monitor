@@ -1,2 +1,172 @@
-# api-monitor
-Open-source API monitoring and uptime platform.
+# API Monitor
+
+Plataforma open-source para monitoramento de APIs e disponibilidade — construída de forma transparente, colaborativa e extensível.
+
+## Overview
+
+Manter APIs saudáveis exige visibilidade contínua sobre disponibilidade, tempo de resposta e falhas. O **API Monitor** nasce com a missão de oferecer uma solução open-source para acompanhar endpoints, detectar indisponibilidade e centralizar informações essenciais sobre a saúde das APIs.
+
+O projeto está sendo desenvolvido em estágio inicial, com foco em uma base sólida de arquitetura, qualidade de código e boas práticas de colaboração open-source.
+
+## Status
+
+**Em desenvolvimento inicial.**
+
+A API backend já possui uma rota básica de verificação. Demais componentes — como frontend, pacotes compartilhados e funcionalidades de monitoramento — ainda estão em construção.
+
+## Features
+
+### Atualmente disponível
+
+- API backend com Fastify 5
+- Rota `GET /` retornando status básico da aplicação
+- Monorepo com npm workspaces
+- Configuração de ESLint e Prettier
+- Documentação e templates para contribuição open-source
+
+### Planejado
+
+As funcionalidades abaixo fazem parte da visão do projeto, mas **ainda não estão implementadas**:
+
+- Monitoramento contínuo de endpoints
+- Health checks configuráveis
+- Rastreamento de uptime
+- Métricas de tempo de resposta
+- Alertas e notificações
+- Dashboard web
+- Histórico de eventos e incidentes
+- Integrações com ferramentas externas
+
+## Tech Stack
+
+Tecnologias utilizadas atualmente no repositório:
+
+| Tecnologia                                    | Uso                                 |
+| --------------------------------------------- | ----------------------------------- |
+| [Node.js 24](https://nodejs.org/)             | Runtime                             |
+| [npm 11](https://www.npmjs.com/)              | Gerenciador de pacotes e workspaces |
+| [TypeScript](https://www.typescriptlang.org/) | Tipagem estática                    |
+| [Fastify 5](https://fastify.dev/)             | Framework HTTP da API               |
+| [tsx](https://github.com/privatenumber/tsx)   | Execução da API em desenvolvimento  |
+| ES Modules                                    | Módulos na aplicação `apps/api`     |
+| [ESLint](https://eslint.org/)                 | Análise estática de código          |
+| [Prettier](https://prettier.io/)              | Formatação de código                |
+
+## Architecture
+
+O repositório é organizado como monorepo:
+
+```text
+api-monitor/
+├── apps/
+│   ├── api/       # API backend (Fastify) — em desenvolvimento ativo
+│   └── web/       # Frontend — em desenvolvimento
+├── packages/      # Pacotes compartilhados — em desenvolvimento
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+└── SECURITY.md
+```
+
+- **`apps/api`** — contém a API backend. Atualmente expõe a rota `GET /`.
+- **`apps/web`** — reservado para o frontend. Ainda não possui implementação neste repositório.
+- **`packages/`** — reservado para bibliotecas e utilitários compartilhados. Ainda em desenvolvimento.
+
+## Getting Started
+
+### Pré-requisitos
+
+- Node.js 24
+- npm 11
+
+### Instalação e execução
+
+1. Clone o repositório:
+
+```bash
+git clone https://github.com/Geendersom/api-monitor.git
+cd api-monitor
+```
+
+2. Instale as dependências na raiz do monorepo:
+
+```bash
+npm install
+```
+
+3. Inicie a API em modo de desenvolvimento:
+
+```bash
+npm run dev --workspace=api
+```
+
+A API ficará disponível em `http://127.0.0.1:3000`.
+
+Para testar a rota principal:
+
+```bash
+curl http://127.0.0.1:3000/
+```
+
+## API
+
+### `GET /`
+
+Retorna o status básico da aplicação.
+
+**Resposta de exemplo:**
+
+```json
+{
+  "name": "API Monitor",
+  "status": "online"
+}
+```
+
+## Development
+
+Comandos disponíveis na raiz do repositório:
+
+| Comando                | Descrição                                  |
+| ---------------------- | ------------------------------------------ |
+| `npm run lint`         | Analisa o código com ESLint                |
+| `npm run format`       | Formata os arquivos com Prettier           |
+| `npm run format:check` | Verifica a formatação sem alterar arquivos |
+
+Recomendamos executar `npm run lint` e `npm run format:check` antes de enviar contribuições.
+
+## Roadmap
+
+Visão inicial do projeto — sujeita a evolução conforme a comunidade e os mantenedores definem prioridades:
+
+- [ ] **API monitoring** — cadastro e verificação periódica de endpoints
+- [ ] **Health checks** — checagens configuráveis por serviço
+- [ ] **Uptime tracking** — acompanhamento de disponibilidade ao longo do tempo
+- [ ] **Response time metrics** — coleta e visualização de latência
+- [ ] **Alerting** — notificações quando limites forem ultrapassados
+- [ ] **Dashboard** — interface web para acompanhar o status dos serviços
+- [ ] **History** — registro histórico de eventos e incidentes
+- [ ] **Integrations** — conexão com ferramentas externas
+
+> Itens acima representam planejamento futuro. Nenhuma data foi definida.
+
+## Contributing
+
+Contribuições são bem-vindas — seja com código, documentação, revisões ou reportes de problemas.
+
+Consulte o [Guia de Contribuição](CONTRIBUTING.md) para instruções sobre fork, setup local, padrões de commit e abertura de Pull Requests.
+
+## Security
+
+Se você identificar uma vulnerabilidade de segurança, consulte a [Política de Segurança](SECURITY.md) e reporte de forma responsável. **Não** abra Issues públicas para vulnerabilidades.
+
+## Code of Conduct
+
+Este projeto adota o [Contributor Covenant](CODE_OF_CONDUCT.md). Ao participar, você concorda em respeitar um ambiente acolhedor e inclusivo.
+
+## License
+
+Este projeto está licenciado sob a **ISC License**, conforme definido no `package.json` do repositório.
+
+## Star the project
+
+Se o API Monitor faz sentido para você, considere deixar uma ⭐ Star no repositório. Isso ajuda outras pessoas a descobrirem o projeto e acompanhar sua evolução ao longo do tempo.
