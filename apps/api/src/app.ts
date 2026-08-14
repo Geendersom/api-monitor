@@ -1,11 +1,13 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
-import { MonitorStore } from "./monitors/store.js";
+import type { HealthCheckOptions } from "./monitors/check.js";
 import { registerMonitorRoutes } from "./monitors/routes.js";
+import { MonitorStore } from "./monitors/store.js";
 
 type BuildAppOptions = {
   logger?: boolean;
   monitorStore?: MonitorStore;
+  healthCheck?: HealthCheckOptions;
 };
 
 export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
@@ -28,7 +30,7 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
     };
   });
 
-  registerMonitorRoutes(app, monitorStore);
+  registerMonitorRoutes(app, monitorStore, options.healthCheck);
 
   return app;
 };
