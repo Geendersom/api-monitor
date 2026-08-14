@@ -1,7 +1,8 @@
 import type { FastifyInstance } from "fastify";
 
-import { performHealthCheck, type HealthCheckOptions } from "./check.js";
-import { createCheckResult, type CheckHistoryStore } from "./history.js";
+import type { HealthCheckOptions } from "./check.js";
+import type { CheckHistoryStore } from "./history.js";
+import { runMonitorCheck } from "./run-check.js";
 import type { MonitorStore } from "./store.js";
 import { validateCreateMonitorBody } from "./validation.js";
 
@@ -38,9 +39,11 @@ export const registerMonitorRoutes = (
         return reply.status(404).send({ error: "Monitor not found" });
       }
 
-      const result = await performHealthCheck(monitor.url, healthCheckOptions);
-
-      historyStore.add(createCheckResult(monitor.id, result));
+      const result = await runMonitorCheck(
+        monitor,
+        historyStore,
+        healthCheckOptions,
+      );
 
       return reply.status(200).send(result);
     },

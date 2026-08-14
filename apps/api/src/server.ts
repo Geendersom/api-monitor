@@ -8,6 +8,8 @@ const start = async () => {
       port: 3000,
       host: "127.0.0.1",
     });
+
+    app.monitorScheduler.start();
   } catch (error) {
     app.log.error(error);
     process.exit(1);
