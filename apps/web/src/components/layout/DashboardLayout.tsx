@@ -1,24 +1,35 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+
+import { DashboardHeader } from "./DashboardHeader.js";
+import { Sidebar } from "./Sidebar.js";
 
 type DashboardLayoutProps = {
   children: ReactNode;
+  lastUpdatedAt: string | null;
+  onRefresh: () => void;
+  refreshing: boolean;
 };
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({
+  children,
+  lastUpdatedAt,
+  onRefresh,
+  refreshing,
+}: DashboardLayoutProps) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div className="app-header__content">
-          <div>
-            <p className="app-header__eyebrow">API Monitor</p>
-            <h1 className="app-header__title">Dashboard</h1>
-          </div>
-          <p className="app-header__subtitle">
-            Visão consolidada de monitores, incidentes e alertas.
-          </p>
-        </div>
-      </header>
-      <main className="app-main">{children}</main>
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="app-frame">
+        <DashboardHeader
+          lastUpdatedAt={lastUpdatedAt}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          onMenuToggle={() => setSidebarOpen(true)}
+        />
+        <main className="app-main">{children}</main>
+      </div>
     </div>
   );
 };

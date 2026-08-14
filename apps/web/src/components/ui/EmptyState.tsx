@@ -5,11 +5,16 @@ type EmptyStateProps = {
 export const EmptyState = ({ onRetry }: EmptyStateProps) => {
   return (
     <section className="state-panel state-panel--empty">
-      <p className="state-panel__title">Nenhum dado disponível ainda</p>
+      <div
+        className="state-panel__icon state-panel__icon--empty"
+        aria-hidden="true"
+      >
+        ○
+      </div>
+      <p className="state-panel__title">Dashboard vazia</p>
       <p className="state-panel__description">
-        A API está respondendo, mas ainda não há monitores ou alertas
-        registrados. Crie monitores pela API para começar a acompanhar o
-        sistema.
+        A API respondeu, mas ainda não há monitores ou alertas registrados.
+        Cadastre monitores para começar o acompanhamento.
       </p>
       {onRetry ? (
         <button

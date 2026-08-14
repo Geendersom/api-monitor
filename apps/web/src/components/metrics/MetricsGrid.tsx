@@ -10,46 +10,51 @@ type MetricsGridProps = {
 };
 
 export const MetricsGrid = ({ overview }: MetricsGridProps) => {
+  const unknownMonitors =
+    overview.totalMonitors - overview.upMonitors - overview.downMonitors;
+
+  const offlineParts = [
+    overview.downMonitors > 0 ? `${overview.downMonitors} offline` : null,
+    unknownMonitors > 0 ? `${unknownMonitors} sem checks` : null,
+  ].filter(Boolean);
+
+  const onlineHint =
+    overview.totalMonitors === 0
+      ? "Nenhum monitor cadastrado"
+      : `${overview.upMonitors} online${offlineParts.length > 0 ? ` · ${offlineParts.join(" · ")}` : ""}`;
+
   return (
-    <section className="metrics-grid" aria-label="Métricas principais">
+    <section className="metrics-grid" aria-label="Resumo geral">
       <MetricCard
-        label="Total de monitores"
+        label="Monitores"
         value={String(overview.totalMonitors)}
+        hint={onlineHint}
       />
       <MetricCard
-        label="Monitores UP"
-        value={String(overview.upMonitors)}
-        tone="success"
+        label="Uptime"
+        value={formatPercentage(overview.overallUptimePercentage)}
+        hint="Últimas 24 horas"
+        tone="accent"
       />
       <MetricCard
-        label="Monitores DOWN"
-        value={String(overview.downMonitors)}
-        tone="danger"
+        label="Latência média"
+        value={formatMilliseconds(overview.averageResponseTimeMs)}
+        hint="Últimas 24 horas"
       />
       <MetricCard
-        label="Incidentes abertos"
-        value={String(overview.openIncidents)}
-        tone={overview.openIncidents > 0 ? "warning" : "default"}
+        label="Incidentes"
+        value={String(overview.openIncidents + overview.resolvedIncidents)}
         hint={
           overview.openIncidents > 0
-            ? "Requer atenção imediata"
-            : "Nenhum incidente ativo"
+            ? `${overview.openIncidents} em andamento`
+            : "Nenhum em andamento"
         }
+        tone={overview.openIncidents > 0 ? "warning" : "default"}
       />
       <MetricCard
-        label="Uptime 24h"
-        value={formatPercentage(overview.overallUptimePercentage)}
-        tone="accent"
-        hint={`Período ${overview.period}`}
-      />
-      <MetricCard
-        label="Latência média 24h"
-        value={formatMilliseconds(overview.averageResponseTimeMs)}
-        hint="Todos os monitores"
-      />
-      <MetricCard
-        label="Total de alertas"
+        label="Alertas"
         value={String(overview.totalAlerts)}
+        hint="Últimos eventos registrados"
       />
     </section>
   );

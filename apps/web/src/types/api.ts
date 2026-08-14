@@ -57,6 +57,10 @@ export type MonitorWithStatus = Monitor & {
   hasOpenIncident: boolean;
   lastCheckedAt?: string;
   responseTimeMs?: number;
+  openIncident?: {
+    id: string;
+    startedAt: string;
+  };
 };
 
 export type DashboardData = {

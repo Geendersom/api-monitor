@@ -77,15 +77,23 @@ const buildMonitorWithStatus = async (
   ]);
 
   const lastCheck = checksResponse.checks.at(-1);
-  const hasOpenIncident = incidentsResponse.incidents.some(
+  const openIncident = incidentsResponse.incidents.find(
     (incident) => incident.status === "open",
   );
+  const hasOpenIncident = openIncident !== undefined;
 
   const monitorWithStatus: MonitorWithStatus = {
     ...monitor,
     status: lastCheck?.status ?? "unknown",
     hasOpenIncident,
   };
+
+  if (openIncident) {
+    monitorWithStatus.openIncident = {
+      id: openIncident.id,
+      startedAt: openIncident.startedAt,
+    };
+  }
 
   if (lastCheck) {
     monitorWithStatus.lastCheckedAt = lastCheck.checkedAt;
@@ -132,4 +140,46 @@ export const formatPercentage = (value: number): string => {
 
 export const formatMilliseconds = (value: number): string => {
   return `${Math.round(value)} ms`;
+};
+
+export const formatRelativeTime = (value: string): string => {
+  const target = new Date(value).getTime();
+  const diffMs = Date.now() - target;
+  const diffSeconds = Math.max(0, Math.round(diffMs / 1000));
+
+  if (diffSeconds < 60) {
+    return `há ${diffSeconds}s`;
+  }
+
+  const diffMinutes = Math.round(diffSeconds / 60);
+
+  if (diffMinutes < 60) {
+    return `há ${diffMinutes} min`;
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+
+  if (diffHours < 24) {
+    return `há ${diffHours} h`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `há ${diffDays} d`;
+};
+
+export const formatDuration = (durationMs: number): string => {
+  const totalSeconds = Math.max(0, Math.floor(durationMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
 };

@@ -1,14 +1,18 @@
 import type { AlertEvent } from "../../types/api.js";
 import {
   formatAlertType,
-  formatDateTime,
+  formatRelativeTime,
 } from "../../services/dashboard-service.js";
 
 type RecentAlertsListProps = {
   alerts: AlertEvent[];
+  monitorNames: Record<string, string>;
 };
 
-export const RecentAlertsList = ({ alerts }: RecentAlertsListProps) => {
+export const RecentAlertsList = ({
+  alerts,
+  monitorNames,
+}: RecentAlertsListProps) => {
   return (
     <section className="panel" aria-labelledby="recent-alerts-title">
       <div className="panel__header">
@@ -16,9 +20,7 @@ export const RecentAlertsList = ({ alerts }: RecentAlertsListProps) => {
           <h2 id="recent-alerts-title" className="panel__title">
             Alertas recentes
           </h2>
-          <p className="panel__subtitle">
-            Últimos eventos registrados pela API
-          </p>
+          <p className="panel__subtitle">Linha do tempo compacta de eventos</p>
         </div>
         <span className="panel__count">{alerts.length}</span>
       </div>
@@ -26,22 +28,33 @@ export const RecentAlertsList = ({ alerts }: RecentAlertsListProps) => {
       {alerts.length === 0 ? (
         <p className="panel__empty">Nenhum alerta recente.</p>
       ) : (
-        <ul className="alert-list">
+        <ul className="timeline-list">
           {alerts.map((alert) => (
             <li
               key={alert.id}
-              className={`alert-list__item alert-list__item--${alert.type}`}
+              className={`timeline-list__item timeline-list__item--${alert.type}`}
             >
-              <div className="alert-list__header">
-                <span className="alert-list__type">
-                  {formatAlertType(alert.type)}
-                </span>
-                <time className="alert-list__time" dateTime={alert.createdAt}>
-                  {formatDateTime(alert.createdAt)}
-                </time>
+              <span
+                className={`timeline-list__dot timeline-list__dot--${alert.type}`}
+                aria-hidden="true"
+              />
+              <div className="timeline-list__content">
+                <div className="timeline-list__header">
+                  <span className="timeline-list__type">
+                    {formatAlertType(alert.type)}
+                  </span>
+                  <time
+                    className="timeline-list__time"
+                    dateTime={alert.createdAt}
+                  >
+                    {formatRelativeTime(alert.createdAt)}
+                  </time>
+                </div>
+                <p className="timeline-list__monitor">
+                  {monitorNames[alert.monitorId] ?? alert.monitorId}
+                </p>
+                <p className="timeline-list__message">{alert.message}</p>
               </div>
-              <p className="alert-list__message">{alert.message}</p>
-              <p className="alert-list__meta">Monitor {alert.monitorId}</p>
             </li>
           ))}
         </ul>

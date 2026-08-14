@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DashboardLayout } from "../components/layout/DashboardLayout.js";
 import { RecentAlertsList } from "../components/alerts/RecentAlertsList.js";
+import { ActiveIncidentsPanel } from "../components/incidents/ActiveIncidentsPanel.js";
 import { MetricsGrid } from "../components/metrics/MetricsGrid.js";
 import { MonitorsTable } from "../components/monitors/MonitorsTable.js";
 import { EmptyState } from "../components/ui/EmptyState.js";
@@ -45,6 +46,7 @@ export const DashboardPage = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -53,6 +55,7 @@ export const DashboardPage = () => {
     try {
       const dashboardData = await fetchDashboardData();
       setData(dashboardData);
+      setLastUpdatedAt(new Date().toISOString());
     } catch (loadError) {
       const message =
         loadError instanceof Error
@@ -71,8 +74,22 @@ export const DashboardPage = () => {
 
   const viewState = resolveViewState(data, error, loading);
 
+  const monitorNames = useMemo(() => {
+    if (!data) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      data.monitors.map((monitor) => [monitor.id, monitor.name]),
+    );
+  }, [data]);
+
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      lastUpdatedAt={lastUpdatedAt}
+      onRefresh={loadDashboard}
+      refreshing={loading}
+    >
       {viewState === "loading" ? <LoadingState /> : null}
 
       {viewState === "error" ? (
@@ -87,9 +104,13 @@ export const DashboardPage = () => {
       {viewState === "success" && data ? (
         <div className="dashboard-content">
           <MetricsGrid overview={data.overview} />
-          <div className="dashboard-grid">
-            <RecentAlertsList alerts={data.overview.recentAlerts} />
-            <MonitorsTable monitors={data.monitors} />
+          <MonitorsTable monitors={data.monitors} />
+          <div className="dashboard-split">
+            <ActiveIncidentsPanel monitors={data.monitors} />
+            <RecentAlertsList
+              alerts={data.overview.recentAlerts}
+              monitorNames={monitorNames}
+            />
           </div>
         </div>
       ) : null}

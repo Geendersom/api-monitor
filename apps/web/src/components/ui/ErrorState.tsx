@@ -6,9 +6,13 @@ type ErrorStateProps = {
 export const ErrorState = ({ message, onRetry }: ErrorStateProps) => {
   return (
     <section className="state-panel state-panel--error" role="alert">
-      <p className="state-panel__title">
-        Não foi possível carregar a dashboard
-      </p>
+      <div
+        className="state-panel__icon state-panel__icon--error"
+        aria-hidden="true"
+      >
+        !
+      </div>
+      <p className="state-panel__title">Falha ao carregar a dashboard</p>
       <p className="state-panel__description">{message}</p>
       {onRetry ? (
         <button
