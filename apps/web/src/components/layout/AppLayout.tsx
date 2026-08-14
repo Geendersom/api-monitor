@@ -1,21 +1,59 @@
 import { useState, type ReactNode } from "react";
 
-import { Sidebar } from "./Sidebar.js";
+import { MockDataBanner } from "../ui/MockDataBanner.js";
+import { PageHeader } from "./PageHeader.js";
+import { TopNav } from "./TopNav.js";
 
 type AppLayoutProps = {
   children: ReactNode;
-  header: (controls: { onMenuToggle: () => void }) => ReactNode;
+  title?: string;
+  subtitle?: string;
+  lastUpdatedAt?: string | null;
+  downMonitors?: number;
+  onRefresh?: () => void;
+  refreshing?: boolean;
+  operational?: boolean;
+  isMock?: boolean;
+  headerContent?: ReactNode;
 };
 
-export const AppLayout = ({ children, header }: AppLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+export const AppLayout = ({
+  children,
+  title,
+  subtitle,
+  lastUpdatedAt,
+  downMonitors,
+  onRefresh,
+  refreshing,
+  operational = true,
+  isMock = false,
+  headerContent,
+}: AppLayoutProps) => {
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="app-shell">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <TopNav
+        operational={operational}
+        menuOpen={menuOpen}
+        onMenuToggle={() => setMenuOpen(true)}
+        onMenuClose={() => setMenuOpen(false)}
+      />
       <div className="app-frame">
-        {header({ onMenuToggle: () => setSidebarOpen(true) })}
-        <main className="app-main">{children}</main>
+        {headerContent ??
+          (title ? (
+            <PageHeader
+              title={title}
+              {...(subtitle ? { subtitle } : {})}
+              {...(lastUpdatedAt ? { lastUpdatedAt } : {})}
+              {...(downMonitors !== undefined ? { downMonitors } : {})}
+              {...(onRefresh ? { onRefresh, refreshing } : {})}
+            />
+          ) : null)}
+        <main className="app-main">
+          <MockDataBanner visible={isMock} />
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -1,12 +1,17 @@
-import type { AlertEvent } from "../../types/api.js";
-import {
-  formatAlertType,
-  formatRelativeTime,
-} from "../../services/formatters.js";
+import type { AlertEvent, AlertTone } from "../../types/api.js";
+import { formatRelativeTime } from "../../services/formatters.js";
 
 type RecentAlertsListProps = {
   alerts: AlertEvent[];
   monitorNames: Record<string, string>;
+};
+
+const resolveAlertTone = (alert: AlertEvent): AlertTone => {
+  if (alert.tone) {
+    return alert.tone;
+  }
+
+  return alert.type === "incident_resolved" ? "recovery" : "down";
 };
 
 export const RecentAlertsList = ({
@@ -18,9 +23,8 @@ export const RecentAlertsList = ({
       <div className="panel__header">
         <div>
           <h2 id="recent-alerts-title" className="panel__title">
-            Alertas recentes
+            Recent alerts
           </h2>
-          <p className="panel__subtitle">Linha do tempo compacta de eventos</p>
         </div>
         <span className="panel__count">{alerts.length}</span>
       </div>
@@ -29,20 +33,24 @@ export const RecentAlertsList = ({
         <p className="panel__empty">Nenhum alerta recente.</p>
       ) : (
         <ul className="timeline-list">
-          {alerts.map((alert) => (
-            <li
-              key={alert.id}
-              className={`timeline-list__item timeline-list__item--${alert.type}`}
-            >
-              <span
-                className={`timeline-list__dot timeline-list__dot--${alert.type}`}
-                aria-hidden="true"
-              />
-              <div className="timeline-list__content">
-                <div className="timeline-list__header">
-                  <span className="timeline-list__type">
-                    {formatAlertType(alert.type)}
-                  </span>
+          {alerts.map((alert) => {
+            const tone = resolveAlertTone(alert);
+            const monitorName =
+              monitorNames[alert.monitorId] ?? alert.monitorId;
+
+            return (
+              <li
+                key={alert.id}
+                className={`timeline-list__item timeline-list__item--${tone}`}
+              >
+                <span
+                  className={`timeline-list__dot timeline-list__dot--${tone}`}
+                  aria-hidden="true"
+                />
+                <div className="timeline-list__content">
+                  <p className="timeline-list__message">
+                    {alert.message || `${monitorName} · ${alert.type}`}
+                  </p>
                   <time
                     className="timeline-list__time"
                     dateTime={alert.createdAt}
@@ -50,13 +58,9 @@ export const RecentAlertsList = ({
                     {formatRelativeTime(alert.createdAt)}
                   </time>
                 </div>
-                <p className="timeline-list__monitor">
-                  {monitorNames[alert.monitorId] ?? alert.monitorId}
-                </p>
-                <p className="timeline-list__message">{alert.message}</p>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

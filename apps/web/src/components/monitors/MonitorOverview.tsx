@@ -67,13 +67,13 @@ export const MonitorOverview = ({ data }: MonitorOverviewProps) => {
           label={`Uptime ${uptime.period}`}
           value={formatPercentage(uptime.uptimePercentage)}
           hint={`${uptime.totalChecks} checks no período`}
-          tone="accent"
+          tone="success"
         />
         <MetricCard
           label={`SLA ${sla.period}`}
           value={formatSlaStatus(sla.status)}
           hint={`Alvo ${formatPercentage(sla.slaTargetPercentage)}`}
-          tone={sla.status === "breached" ? "warning" : "success"}
+          tone={sla.status === "breached" ? "danger" : "success"}
         />
         <MetricCard
           label="Incidente"
@@ -83,7 +83,7 @@ export const MonitorOverview = ({ data }: MonitorOverviewProps) => {
               ? `Desde ${formatDateTime(openIncident.startedAt)} · ${formatDuration(Date.now() - new Date(openIncident.startedAt).getTime())}`
               : "Sem incidentes ativos"
           }
-          tone={openIncident ? "warning" : "default"}
+          tone={openIncident ? "danger" : "default"}
         />
       </div>
 

@@ -2,7 +2,7 @@ type MetricCardProps = {
   label: string;
   value: string;
   hint?: string;
-  tone?: "default" | "success" | "danger" | "warning" | "accent";
+  tone?: "default" | "success" | "danger" | "warning";
 };
 
 export const MetricCard = ({

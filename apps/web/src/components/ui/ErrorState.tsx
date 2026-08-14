@@ -1,9 +1,14 @@
 type ErrorStateProps = {
+  title?: string;
   message: string;
   onRetry?: () => void;
 };
 
-export const ErrorState = ({ message, onRetry }: ErrorStateProps) => {
+export const ErrorState = ({
+  title = "API unavailable",
+  message,
+  onRetry,
+}: ErrorStateProps) => {
   return (
     <section className="state-panel state-panel--error" role="alert">
       <div
@@ -12,12 +17,12 @@ export const ErrorState = ({ message, onRetry }: ErrorStateProps) => {
       >
         !
       </div>
-      <p className="state-panel__title">Falha ao carregar a dashboard</p>
+      <p className="state-panel__title">{title}</p>
       <p className="state-panel__description">{message}</p>
       {onRetry ? (
         <button
           type="button"
-          className="button button--primary"
+          className="button button--refresh"
           onClick={onRetry}
         >
           Tentar novamente

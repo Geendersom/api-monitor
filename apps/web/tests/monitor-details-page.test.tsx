@@ -132,7 +132,7 @@ describe("MonitorDetailsPage", () => {
     renderPage();
 
     expect(
-      await screen.findByText("Falha ao carregar a dashboard"),
+      await screen.findByText("Não foi possível conectar ao backend."),
     ).toBeInTheDocument();
 
     await fireEvent.click(

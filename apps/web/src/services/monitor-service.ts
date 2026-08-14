@@ -1,4 +1,6 @@
+import { getMockMonitorDetailsAsync } from "../mocks/monitor-mock.js";
 import { apiRequest } from "./api-client.js";
+import { resolveWithMockFallback } from "./mock-fallback.js";
 import type {
   AlertEvent,
   CheckResult,
@@ -61,7 +63,7 @@ const deriveStatus = (checks: CheckResult[]): MonitorStatus => {
   return lastCheck?.status ?? "unknown";
 };
 
-export const fetchMonitorDetails = async (
+const fetchMonitorDetailsFromApi = async (
   monitorId: string,
   uptimePeriod: UptimePeriod = "24h",
   slaPeriod: UptimePeriod = "24h",
@@ -104,6 +106,37 @@ export const fetchMonitorDetails = async (
     activeMaintenance,
     alerts: [...alerts].reverse(),
   };
+};
+
+const fetchMonitorDetailsFromMock = async (
+  monitorId: string,
+  uptimePeriod: UptimePeriod,
+  slaPeriod: UptimePeriod,
+): Promise<MonitorDetailsData> => {
+  const details = await getMockMonitorDetailsAsync(
+    monitorId,
+    uptimePeriod,
+    slaPeriod,
+  );
+
+  if (!details) {
+    throw new ApiError("Monitor not found", 404);
+  }
+
+  return details;
+};
+
+export const fetchMonitorDetails = async (
+  monitorId: string,
+  uptimePeriod: UptimePeriod = "24h",
+  slaPeriod: UptimePeriod = "24h",
+): Promise<MonitorDetailsData> => {
+  const result = await resolveWithMockFallback(
+    () => fetchMonitorDetailsFromApi(monitorId, uptimePeriod, slaPeriod),
+    () => fetchMonitorDetailsFromMock(monitorId, uptimePeriod, slaPeriod),
+  );
+
+  return result.data;
 };
 
 export { ApiError };

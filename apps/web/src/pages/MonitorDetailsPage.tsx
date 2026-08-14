@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { AppLayout } from "../components/layout/AppLayout.js";
-import { DashboardHeader } from "../components/layout/DashboardHeader.js";
+import { PageHeader } from "../components/layout/PageHeader.js";
 import { MonitorAlertsPanel } from "../components/monitors/MonitorAlertsPanel.js";
 import { CheckHistoryPanel } from "../components/monitors/CheckHistoryPanel.js";
 import { MonitorHeader } from "../components/monitors/MonitorHeader.js";
@@ -14,6 +14,7 @@ import { MaintenancePanel } from "../components/maintenance/MaintenancePanel.js"
 import { ErrorState } from "../components/ui/ErrorState.js";
 import { LoadingState } from "../components/ui/LoadingState.js";
 import { MonitorNotFoundState } from "../components/ui/MonitorNotFoundState.js";
+import { USE_MOCK_DATA } from "../config/env.js";
 import { ApiError, fetchMonitorDetails } from "../services/monitor-service.js";
 import type { MonitorDetailsData, UptimePeriod } from "../types/api.js";
 
@@ -70,7 +71,9 @@ export const MonitorDetailsPage = () => {
 
   return (
     <AppLayout
-      header={({ onMenuToggle }) =>
+      operational={data?.status !== "down"}
+      isMock={USE_MOCK_DATA || import.meta.env.DEV}
+      headerContent={
         viewState === "success" && data ? (
           <MonitorHeader
             monitor={data.monitor}
@@ -78,16 +81,10 @@ export const MonitorDetailsPage = () => {
             lastUpdatedAt={lastUpdatedAt}
             refreshing={loading}
             onRefresh={loadMonitorDetails}
-            onMenuToggle={onMenuToggle}
             inMaintenance={data.activeMaintenance.active}
           />
         ) : (
-          <DashboardHeader
-            lastUpdatedAt={lastUpdatedAt}
-            onRefresh={loadMonitorDetails}
-            refreshing={loading}
-            onMenuToggle={onMenuToggle}
-          />
+          <PageHeader title="Monitor" subtitle="Detalhes do serviço." />
         )
       }
     >
@@ -99,7 +96,12 @@ export const MonitorDetailsPage = () => {
 
       {viewState === "error" ? (
         <ErrorState
-          message={error ?? "Erro desconhecido."}
+          message={
+            error?.includes("conectar") ||
+            error?.toLowerCase().includes("unavailable")
+              ? "Não foi possível conectar ao backend."
+              : (error ?? "Erro desconhecido.")
+          }
           onRetry={loadMonitorDetails}
         />
       ) : null}

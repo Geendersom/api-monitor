@@ -1,12 +1,18 @@
-import { apiRequest } from "./api-client.js";
+import { USE_MOCK_DATA } from "../config/env.js";
+import { getMockDashboardDataAsync } from "../mocks/index.js";
 import type {
   CheckResult,
   DashboardData,
   DashboardOverview,
   Incident,
   Monitor,
+  MonitorUptime,
   MonitorWithStatus,
+  UptimePeriod,
+  FetchResult,
 } from "../types/api.js";
+import { apiRequest } from "./api-client.js";
+import { resolveWithMockFallback } from "./mock-fallback.js";
 
 type MonitorsResponse = {
   monitors: Monitor[];
@@ -19,6 +25,8 @@ type ChecksResponse = {
 type IncidentsResponse = {
   incidents: Incident[];
 };
+
+const DASHBOARD_UPTIME_PERIOD: UptimePeriod = "24h";
 
 const getOverview = (): Promise<DashboardOverview> =>
   apiRequest<DashboardOverview>("/dashboard/overview");
@@ -34,12 +42,19 @@ export const getMonitorIncidents = (
 ): Promise<IncidentsResponse> =>
   apiRequest<IncidentsResponse>(`/monitors/${monitorId}/incidents`);
 
+const getMonitorUptime = (
+  monitorId: string,
+  period: UptimePeriod,
+): Promise<MonitorUptime> =>
+  apiRequest<MonitorUptime>(`/monitors/${monitorId}/uptime?period=${period}`);
+
 const buildMonitorWithStatus = async (
   monitor: Monitor,
 ): Promise<MonitorWithStatus> => {
-  const [checksResponse, incidentsResponse] = await Promise.all([
+  const [checksResponse, incidentsResponse, uptime] = await Promise.all([
     getMonitorChecks(monitor.id),
     getMonitorIncidents(monitor.id),
+    getMonitorUptime(monitor.id, DASHBOARD_UPTIME_PERIOD),
   ]);
 
   const lastCheck = checksResponse.checks.at(-1);
@@ -52,12 +67,14 @@ const buildMonitorWithStatus = async (
     ...monitor,
     status: lastCheck?.status ?? "unknown",
     hasOpenIncident,
+    uptimePercentage: uptime.uptimePercentage,
   };
 
   if (openIncident) {
     monitorWithStatus.openIncident = {
       id: openIncident.id,
       startedAt: openIncident.startedAt,
+      reason: openIncident.reason,
     };
   }
 
@@ -69,7 +86,7 @@ const buildMonitorWithStatus = async (
   return monitorWithStatus;
 };
 
-export const fetchDashboardData = async (): Promise<DashboardData> => {
+export const fetchDashboardDataFromApi = async (): Promise<DashboardData> => {
   const [overview, monitorsResponse] = await Promise.all([
     getOverview(),
     getMonitors(),
@@ -84,6 +101,16 @@ export const fetchDashboardData = async (): Promise<DashboardData> => {
     monitors,
   };
 };
+
+export const fetchDashboardData = (): Promise<FetchResult<DashboardData>> =>
+  resolveWithMockFallback(fetchDashboardDataFromApi, getMockDashboardDataAsync);
+
+export const fetchDashboardDataLegacy = async (): Promise<DashboardData> => {
+  const result = await fetchDashboardData();
+  return result.data;
+};
+
+export { USE_MOCK_DATA };
 
 export {
   formatAlertType,

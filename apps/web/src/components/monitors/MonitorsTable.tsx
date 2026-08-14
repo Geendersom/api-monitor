@@ -5,6 +5,7 @@ import {
   formatDuration,
   formatRelativeTime,
   formatMilliseconds,
+  formatPercentage,
 } from "../../services/formatters.js";
 import { StatusIndicator } from "./StatusIndicator.js";
 
@@ -24,7 +25,7 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
       <div className="panel__header">
         <div>
           <h2 id="monitors-title" className="panel__title">
-            Status dos monitores
+            Monitores
           </h2>
           <p className="panel__subtitle">
             Clique em um monitor para ver detalhes completos
@@ -40,10 +41,12 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
           <table className="data-table monitors-table">
             <thead>
               <tr>
-                <th scope="col">Monitor</th>
                 <th scope="col">Status</th>
-                <th scope="col">Última verificação</th>
-                <th scope="col">Tempo de resposta</th>
+                <th scope="col">Monitor</th>
+                <th scope="col">URL</th>
+                <th scope="col">Uptime</th>
+                <th scope="col">Latência</th>
+                <th scope="col">Último check</th>
                 <th scope="col">Incidente</th>
               </tr>
             </thead>
@@ -52,7 +55,8 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
                 <tr
                   key={monitor.id}
                   className={[
-                    monitor.hasOpenIncident ? "data-table__row--highlight" : "",
+                    monitor.status === "down" ? "data-table__row--down" : "",
+                    monitor.hasOpenIncident ? "data-table__row--incident" : "",
                     "data-table__row--clickable",
                   ]
                     .filter(Boolean)
@@ -69,13 +73,24 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
                   }}
                 >
                   <td>
-                    <div className="monitor-cell">
-                      <span className="monitor-cell__name">{monitor.name}</span>
-                      <span className="monitor-cell__url">{monitor.url}</span>
-                    </div>
+                    <StatusIndicator status={monitor.status} />
                   </td>
                   <td>
-                    <StatusIndicator status={monitor.status} />
+                    <span className="monitor-cell__name">{monitor.name}</span>
+                  </td>
+                  <td>
+                    <span className="monitor-cell__url">{monitor.url}</span>
+                  </td>
+                  <td className="data-table__metric">
+                    {monitor.uptimePercentage !== undefined
+                      ? formatPercentage(monitor.uptimePercentage)
+                      : "—"}
+                  </td>
+                  <td className="data-table__metric">
+                    {monitor.responseTimeMs !== undefined &&
+                    monitor.status !== "down"
+                      ? formatMilliseconds(monitor.responseTimeMs)
+                      : "—"}
                   </td>
                   <td className="data-table__muted">
                     {monitor.lastCheckedAt ? (
@@ -85,11 +100,6 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
                     ) : (
                       "—"
                     )}
-                  </td>
-                  <td>
-                    {monitor.responseTimeMs !== undefined
-                      ? formatMilliseconds(monitor.responseTimeMs)
-                      : "—"}
                   </td>
                   <td>
                     {monitor.hasOpenIncident && monitor.openIncident ? (
@@ -102,7 +112,7 @@ export const MonitorsTable = ({ monitors }: MonitorsTableProps) => {
                       </span>
                     ) : (
                       <span className="incident-pill incident-pill--none">
-                        Nenhum
+                        —
                       </span>
                     )}
                   </td>

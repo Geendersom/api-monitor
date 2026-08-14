@@ -38,7 +38,12 @@ export const CheckHistoryPanel = ({ checks }: CheckHistoryPanelProps) => {
             </thead>
             <tbody>
               {checks.map((check) => (
-                <tr key={check.id}>
+                <tr
+                  key={check.id}
+                  className={
+                    check.status === "down" ? "data-table__row--down" : ""
+                  }
+                >
                   <td>
                     <StatusIndicator status={check.status} />
                   </td>

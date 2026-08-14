@@ -26,10 +26,7 @@ export const apiRequest = async <T>(path: string): Promise<T> => {
   try {
     response = await fetch(buildApiUrl(path));
   } catch {
-    throw new ApiError(
-      "Não foi possível conectar à API. Verifique se o backend está em execução.",
-      0,
-    );
+    throw new ApiError("Não foi possível conectar ao backend.", 0);
   }
 
   return parseJson<T>(response);

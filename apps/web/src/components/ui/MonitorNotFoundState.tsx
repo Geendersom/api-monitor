@@ -13,7 +13,7 @@ export const MonitorNotFoundState = () => {
       <p className="state-panel__description">
         O monitor solicitado não existe ou foi removido.
       </p>
-      <Link to="/" className="button button--primary">
+      <Link to="/" className="button button--refresh">
         Voltar ao Dashboard
       </Link>
     </section>

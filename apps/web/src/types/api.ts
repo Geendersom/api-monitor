@@ -1,5 +1,7 @@
 export type AlertType = "incident_opened" | "incident_resolved";
 
+export type AlertTone = "down" | "recovery" | "warning";
+
 export type AlertEvent = {
   id: string;
   monitorId: string;
@@ -7,6 +9,7 @@ export type AlertEvent = {
   type: AlertType;
   createdAt: string;
   message: string;
+  tone?: AlertTone;
 };
 
 export type DashboardOverview = {
@@ -55,11 +58,14 @@ export type Incident = {
 export type MonitorWithStatus = Monitor & {
   status: MonitorStatus;
   hasOpenIncident: boolean;
+  paused?: boolean;
   lastCheckedAt?: string;
   responseTimeMs?: number;
+  uptimePercentage?: number;
   openIncident?: {
     id: string;
     startedAt: string;
+    reason?: string;
   };
 };
 
@@ -137,3 +143,56 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+
+export type IncidentWithMonitor = Incident & {
+  monitorName: string;
+};
+
+export type MonitorsPageData = {
+  monitors: MonitorWithStatus[];
+  summary: {
+    total: number;
+    up: number;
+    down: number;
+    paused: number;
+  };
+};
+
+export type IncidentsPageData = {
+  active: IncidentWithMonitor[];
+  resolved: IncidentWithMonitor[];
+};
+
+export type AlertsPageData = {
+  alerts: AlertEvent[];
+  monitorNames: Record<string, string>;
+};
+
+export type AppSettings = {
+  monitoring: {
+    checkIntervalSeconds: number;
+    timeoutSeconds: number;
+    retries: number;
+  };
+  notifications: {
+    email: boolean;
+    whatsapp: boolean;
+    telegram: boolean;
+    push: boolean;
+  };
+  system: {
+    appName: string;
+    environment: string;
+    apiUrl: string;
+  };
+  security: {
+    apiStatus: string;
+    lastVerificationAt: string;
+    systemState: string;
+  };
+};
+
+export type FetchResult<T> = {
+  data: T;
+  isMock: boolean;
+};
