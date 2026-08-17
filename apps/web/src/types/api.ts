@@ -16,6 +16,7 @@ export type DashboardOverview = {
   totalMonitors: number;
   upMonitors: number;
   downMonitors: number;
+  problemMonitors?: number;
   openIncidents: number;
   resolvedIncidents: number;
   totalAlerts: number;
@@ -29,8 +30,17 @@ export type DashboardOverview = {
 
 export type MonitorStatus = "up" | "down" | "unknown";
 
+export type MonitorHealth = "online" | "problema" | "offline";
+
+export type UptimeBarSegment = "up" | "down" | "warning" | "empty";
+
 export type Monitor = {
   id: string;
+  name: string;
+  url: string;
+};
+
+export type CreateMonitorInput = {
   name: string;
   url: string;
 };
@@ -57,11 +67,15 @@ export type Incident = {
 
 export type MonitorWithStatus = Monitor & {
   status: MonitorStatus;
+  health?: MonitorHealth;
   hasOpenIncident: boolean;
+  hasWarning?: boolean;
   paused?: boolean;
   lastCheckedAt?: string;
   responseTimeMs?: number;
   uptimePercentage?: number;
+  uptimeBars7d?: UptimeBarSegment[];
+  uptimeBars30d?: UptimeBarSegment[];
   openIncident?: {
     id: string;
     startedAt: string;

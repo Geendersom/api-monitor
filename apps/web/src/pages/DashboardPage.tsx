@@ -1,22 +1,33 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  DashboardMetricModals,
-  type DashboardMetricModal,
-} from "../components/dashboard/DashboardMetricModals.js";
-import { SystemStatusBanner } from "../components/dashboard/SystemStatusBanner.js";
+import { DashboardSummaryCards } from "../components/dashboard/DashboardSummaryCards.js";
+import { DashboardToolbar } from "../components/dashboard/DashboardToolbar.js";
 import { AppLayout } from "../components/layout/AppLayout.js";
-import { RecentAlertsList } from "../components/alerts/RecentAlertsList.js";
-import { ActiveIncidentsPanel } from "../components/incidents/ActiveIncidentsPanel.js";
-import { MetricsGrid } from "../components/metrics/MetricsGrid.js";
-import { MonitorsTable } from "../components/monitors/MonitorsTable.js";
+import { DashboardMonitorsTable } from "../components/monitors/DashboardMonitorsTable.js";
+import { MonitorFormModal } from "../components/monitors/MonitorFormModal.js";
 import { EmptyState } from "../components/ui/EmptyState.js";
 import { ErrorState } from "../components/ui/ErrorState.js";
 import { LoadingState } from "../components/ui/LoadingState.js";
+import { buildOverviewFromMonitors } from "../services/dashboard-overview.js";
 import { fetchDashboardData } from "../services/dashboard-service.js";
-import type { DashboardData } from "../types/api.js";
+import {
+  applyMonitorUpdate,
+  createMonitorOnApi,
+  createMonitorWithStatus,
+  toggleMonitorPaused,
+  validateMonitorForm,
+} from "../services/monitor-management.js";
+import type {
+  CreateMonitorInput,
+  DashboardData,
+  MonitorWithStatus,
+} from "../types/api.js";
 
 type DashboardViewState = "loading" | "success" | "error" | "empty";
+
+type MonitorFormState =
+  | { mode: "create" }
+  | { mode: "edit"; monitor: MonitorWithStatus };
 
 const resolveViewState = (
   data: DashboardData | null,
@@ -47,14 +58,27 @@ const resolveViewState = (
   return "success";
 };
 
+const syncOverview = (
+  data: DashboardData,
+  monitors: MonitorWithStatus[],
+): DashboardData => ({
+  monitors,
+  overview: buildOverviewFromMonitors(
+    monitors,
+    data.overview.recentAlerts,
+    data.overview,
+  ),
+});
+
 export const DashboardPage = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMock, setIsMock] = useState(false);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
-  const [activeMetricModal, setActiveMetricModal] =
-    useState<DashboardMetricModal>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [formState, setFormState] = useState<MonitorFormState | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -64,7 +88,6 @@ export const DashboardPage = () => {
       const result = await fetchDashboardData();
       setData(result.data);
       setIsMock(result.isMock);
-      setLastUpdatedAt(new Date().toISOString());
     } catch (loadError) {
       const message =
         loadError instanceof Error
@@ -82,29 +105,135 @@ export const DashboardPage = () => {
     void loadDashboard();
   }, [loadDashboard]);
 
+  const closeFormModal = useCallback(() => {
+    setFormState(null);
+    setFormError(null);
+    setFormSubmitting(false);
+  }, []);
+
+  const openCreateModal = useCallback(() => {
+    setFormError(null);
+    setFormState({ mode: "create" });
+  }, []);
+
+  const openEditModal = useCallback((monitor: MonitorWithStatus) => {
+    setFormError(null);
+    setFormState({ mode: "edit", monitor });
+  }, []);
+
+  const handleSaveMonitor = useCallback(
+    async (input: CreateMonitorInput) => {
+      const validationError = validateMonitorForm(input);
+      if (validationError) {
+        setFormError(validationError);
+        return;
+      }
+
+      if (!formState || !data) {
+        return;
+      }
+
+      setFormError(null);
+      setFormSubmitting(true);
+
+      try {
+        if (formState.mode === "create") {
+          if (isMock) {
+            const newMonitor = createMonitorWithStatus(input);
+            setData((current) =>
+              current ? syncOverview(current, [...current.monitors, newMonitor]) : current,
+            );
+          } else {
+            const created = await createMonitorOnApi(input);
+            const newMonitor = createMonitorWithStatus(input, created.id);
+            setData((current) =>
+              current ? syncOverview(current, [...current.monitors, newMonitor]) : current,
+            );
+          }
+        } else {
+          setData((current) => {
+            if (!current) {
+              return current;
+            }
+
+            const monitors = current.monitors.map((monitor) =>
+              monitor.id === formState.monitor.id
+                ? applyMonitorUpdate(monitor, input)
+                : monitor,
+            );
+
+            return syncOverview(current, monitors);
+          });
+        }
+
+        closeFormModal();
+      } catch (saveError) {
+        const message =
+          saveError instanceof Error
+            ? saveError.message
+            : "Não foi possível salvar a API.";
+        setFormError(message);
+      } finally {
+        setFormSubmitting(false);
+      }
+    },
+    [closeFormModal, data, formState, isMock],
+  );
+
+  const handleDeleteMonitor = useCallback((monitorId: string) => {
+    setData((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const monitors = current.monitors.filter(
+        (monitor) => monitor.id !== monitorId,
+      );
+
+      return syncOverview(current, monitors);
+    });
+  }, []);
+
+  const handleTogglePause = useCallback((monitorId: string) => {
+    setData((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const monitors = current.monitors.map((monitor) =>
+        monitor.id === monitorId ? toggleMonitorPaused(monitor) : monitor,
+      );
+
+      return syncOverview(current, monitors);
+    });
+  }, []);
+
   const viewState = resolveViewState(data, error, loading);
 
-  const monitorNames = useMemo(() => {
-    if (!data) {
-      return {};
-    }
+  const toolbar = useMemo(
+    () => (
+      <DashboardToolbar
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        onAddMonitor={openCreateModal}
+      />
+    ),
+    [openCreateModal, searchQuery],
+  );
 
-    return Object.fromEntries(
-      data.monitors.map((monitor) => [monitor.id, monitor.name]),
-    );
-  }, [data]);
-
-  const downMonitors = data?.overview.downMonitors ?? 0;
+  const formInitialValues =
+    formState?.mode === "edit"
+      ? { name: formState.monitor.name, url: formState.monitor.url }
+      : undefined;
 
   return (
     <AppLayout
-      title="Dashboard"
-      subtitle="Visão geral da saúde dos seus monitores."
-      lastUpdatedAt={lastUpdatedAt}
-      downMonitors={downMonitors}
-      onRefresh={loadDashboard}
-      refreshing={loading}
-      operational={downMonitors === 0}
+      title="Visão Geral"
+      subtitle="Resumo do status das suas APIs monitoradas."
+      headerActions={toolbar}
+      {...(data?.overview.totalAlerts !== undefined
+        ? { alertCount: data.overview.totalAlerts }
+        : {})}
       isMock={isMock}
     >
       {viewState === "loading" ? <LoadingState /> : null}
@@ -124,28 +253,26 @@ export const DashboardPage = () => {
 
       {viewState === "success" && data ? (
         <div className="page-content page-content--dashboard">
-          <SystemStatusBanner downMonitors={data.overview.downMonitors} />
-          <MetricsGrid
-            overview={data.overview}
-            onOpenModal={setActiveMetricModal}
-          />
-          <MonitorsTable monitors={data.monitors} />
-          <div className="dashboard-split">
-            <ActiveIncidentsPanel monitors={data.monitors} fill />
-            <RecentAlertsList
-              alerts={data.overview.recentAlerts}
-              monitorNames={monitorNames}
-              fill
-            />
-          </div>
-          <DashboardMetricModals
-            activeModal={activeMetricModal}
-            data={data}
-            monitorNames={monitorNames}
-            onClose={() => setActiveMetricModal(null)}
+          <DashboardSummaryCards overview={data.overview} />
+          <DashboardMonitorsTable
+            monitors={data.monitors}
+            searchQuery={searchQuery}
+            onEditMonitor={openEditModal}
+            onDeleteMonitor={handleDeleteMonitor}
+            onTogglePauseMonitor={handleTogglePause}
           />
         </div>
       ) : null}
+
+      <MonitorFormModal
+        open={formState !== null}
+        mode={formState?.mode ?? "create"}
+        {...(formInitialValues ? { initialValues: formInitialValues } : {})}
+        error={formError}
+        submitting={formSubmitting}
+        onClose={closeFormModal}
+        onSubmit={handleSaveMonitor}
+      />
     </AppLayout>
   );
 };

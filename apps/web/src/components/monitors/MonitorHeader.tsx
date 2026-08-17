@@ -10,6 +10,7 @@ type MonitorHeaderProps = {
   lastUpdatedAt: string | null;
   refreshing: boolean;
   onRefresh: () => void;
+  onMenuToggle?: () => void;
   inMaintenance: boolean;
 };
 
@@ -19,11 +20,24 @@ export const MonitorHeader = ({
   lastUpdatedAt,
   refreshing,
   onRefresh,
+  onMenuToggle,
   inMaintenance,
 }: MonitorHeaderProps) => {
   return (
     <div className="page-header monitor-header">
       <div className="page-header__main monitor-header__main">
+        {onMenuToggle ? (
+          <button
+            type="button"
+            className="page-header__menu"
+            aria-label="Abrir menu"
+            onClick={onMenuToggle}
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
+        ) : null}
         <div className="monitor-header__content">
           <Link to="/monitors" className="monitor-header__back">
             ← Voltar aos monitores

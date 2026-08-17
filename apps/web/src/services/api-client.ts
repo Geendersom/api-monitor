@@ -31,3 +31,32 @@ export const apiRequest = async <T>(path: string): Promise<T> => {
 
   return parseJson<T>(response);
 };
+
+type ApiRequestJsonOptions = {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  body?: unknown;
+};
+
+export const apiRequestJson = async <T>(
+  path: string,
+  options: ApiRequestJsonOptions = {},
+): Promise<T> => {
+  let response: Response;
+
+  try {
+    const requestInit: RequestInit = {
+      method: options.method ?? "GET",
+    };
+
+    if (options.body !== undefined) {
+      requestInit.headers = { "Content-Type": "application/json" };
+      requestInit.body = JSON.stringify(options.body);
+    }
+
+    response = await fetch(buildApiUrl(path), requestInit);
+  } catch {
+    throw new ApiError("Não foi possível conectar ao backend.", 0);
+  }
+
+  return parseJson<T>(response);
+};

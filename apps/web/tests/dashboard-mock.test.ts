@@ -16,23 +16,24 @@ describe("centralized mock data", () => {
   it("provides dashboard overview values", () => {
     const data = getMockDashboardData();
 
-    expect(data.overview.totalMonitors).toBe(4);
-    expect(data.overview.upMonitors).toBe(3);
+    expect(data.overview.totalMonitors).toBe(8);
+    expect(data.overview.upMonitors).toBe(6);
     expect(data.overview.downMonitors).toBe(1);
-    expect(data.overview.overallUptimePercentage).toBe(99.97);
+    expect(data.overview.problemMonitors).toBe(1);
+    expect(data.overview.overallUptimePercentage).toBe(99.42);
     expect(data.overview.totalAlerts).toBe(7);
   });
 
-  it("includes four monitors with mixed status", () => {
+  it("includes eight monitors with mixed health", () => {
     const monitors = getMockMonitors();
     const summary = getMockMonitorsSummary(monitors);
 
-    expect(monitors).toHaveLength(4);
-    expect(summary.up).toBe(3);
+    expect(monitors).toHaveLength(8);
+    expect(summary.up).toBe(7);
     expect(summary.down).toBe(1);
 
     const downMonitor = monitors.find(
-      (monitor) => monitor.id === MOCK_MONITOR_IDS.paymentApi,
+      (monitor) => monitor.id === MOCK_MONITOR_IDS.reportsService,
     );
     expect(downMonitor?.status).toBe("down");
   });

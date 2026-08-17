@@ -1,4 +1,5 @@
 import type { DashboardData, DashboardOverview } from "../types/api.js";
+import { countMonitorsByHealth } from "../services/monitor-health.js";
 import { getMockAlerts } from "./alerts-mock.js";
 import { getMockMonitors } from "./monitors-mock.js";
 import { hoursAgo } from "./time.js";
@@ -7,23 +8,19 @@ export { MOCK_MONITOR_IDS, MOCK_MONITOR_NAMES } from "./monitors-mock.js";
 
 const buildOverview = (): DashboardOverview => {
   const monitors = getMockMonitors();
-  const upMonitors = monitors.filter(
-    (monitor) => monitor.status === "up",
-  ).length;
-  const downMonitors = monitors.filter(
-    (monitor) => monitor.status === "down",
-  ).length;
+  const healthCounts = countMonitorsByHealth(monitors);
 
   return {
     totalMonitors: monitors.length,
-    upMonitors,
-    downMonitors,
-    openIncidents: 1,
+    upMonitors: healthCounts.online,
+    downMonitors: healthCounts.offline,
+    problemMonitors: healthCounts.problema,
+    openIncidents: monitors.filter((monitor) => monitor.hasOpenIncident).length,
     resolvedIncidents: 3,
     totalAlerts: getMockAlerts().length,
     recentAlerts: getMockAlerts(),
-    overallUptimePercentage: 99.97,
-    averageResponseTimeMs: 243,
+    overallUptimePercentage: 99.42,
+    averageResponseTimeMs: 143,
     period: "24h",
     from: hoursAgo(24),
     to: new Date().toISOString(),

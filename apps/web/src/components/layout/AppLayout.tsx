@@ -2,7 +2,11 @@ import { useState, type ReactNode } from "react";
 
 import { MockDataBanner } from "../ui/MockDataBanner.js";
 import { PageHeader } from "./PageHeader.js";
-import { TopNav } from "./TopNav.js";
+import { Sidebar } from "./Sidebar.js";
+
+type LayoutControls = {
+  onMenuToggle: () => void;
+};
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -13,8 +17,12 @@ type AppLayoutProps = {
   onRefresh?: () => void;
   refreshing?: boolean;
   operational?: boolean;
+  alertCount?: number;
   isMock?: boolean;
-  headerContent?: ReactNode;
+  headerActions?: ReactNode;
+  headerContent?:
+    | ReactNode
+    | ((controls: LayoutControls) => ReactNode);
 };
 
 export const AppLayout = ({
@@ -26,21 +34,30 @@ export const AppLayout = ({
   onRefresh,
   refreshing,
   operational = true,
+  alertCount,
   isMock = false,
+  headerActions,
   headerContent,
 }: AppLayoutProps) => {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const openSidebar = () => setSidebarOpen(true);
+  const closeSidebar = () => setSidebarOpen(false);
+
+  const resolvedHeader =
+    typeof headerContent === "function"
+      ? headerContent({ onMenuToggle: openSidebar })
+      : headerContent;
 
   return (
     <div className="app-shell">
-      <TopNav
+      <Sidebar
+        open={sidebarOpen}
         operational={operational}
-        menuOpen={menuOpen}
-        onMenuToggle={() => setMenuOpen(true)}
-        onMenuClose={() => setMenuOpen(false)}
+        {...(alertCount !== undefined ? { alertCount } : {})}
+        onClose={closeSidebar}
       />
       <div className="app-frame">
-        {headerContent ??
+        {resolvedHeader ??
           (title ? (
             <PageHeader
               title={title}
@@ -48,6 +65,8 @@ export const AppLayout = ({
               {...(lastUpdatedAt ? { lastUpdatedAt } : {})}
               {...(downMonitors !== undefined ? { downMonitors } : {})}
               {...(onRefresh ? { onRefresh, refreshing } : {})}
+              {...(headerActions ? { actions: headerActions } : {})}
+              onMenuToggle={openSidebar}
             />
           ) : null)}
         <main className="app-main">

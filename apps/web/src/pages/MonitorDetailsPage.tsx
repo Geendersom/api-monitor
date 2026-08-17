@@ -73,7 +73,7 @@ export const MonitorDetailsPage = () => {
     <AppLayout
       operational={data?.status !== "down"}
       isMock={USE_MOCK_DATA || import.meta.env.DEV}
-      headerContent={
+      headerContent={({ onMenuToggle }) =>
         viewState === "success" && data ? (
           <MonitorHeader
             monitor={data.monitor}
@@ -81,10 +81,15 @@ export const MonitorDetailsPage = () => {
             lastUpdatedAt={lastUpdatedAt}
             refreshing={loading}
             onRefresh={loadMonitorDetails}
+            onMenuToggle={onMenuToggle}
             inMaintenance={data.activeMaintenance.active}
           />
         ) : (
-          <PageHeader title="Monitor" subtitle="Detalhes do serviço." />
+          <PageHeader
+            title="Monitor"
+            subtitle="Detalhes do serviço."
+            onMenuToggle={onMenuToggle}
+          />
         )
       }
     >

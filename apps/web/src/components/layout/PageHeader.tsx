@@ -9,6 +9,7 @@ type PageHeaderProps = {
   downMonitors?: number;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onMenuToggle?: () => void;
   actions?: ReactNode;
 };
 
@@ -19,14 +20,30 @@ export const PageHeader = ({
   downMonitors = 0,
   onRefresh,
   refreshing = false,
+  onMenuToggle,
   actions,
 }: PageHeaderProps) => {
   const isOperational = downMonitors === 0;
-  const showStatus = downMonitors !== undefined && title === "Dashboard";
+  const showStatus =
+    downMonitors !== undefined &&
+    title !== "Dashboard" &&
+    title !== "Visão Geral";
 
   return (
     <div className="page-header">
       <div className="page-header__main">
+        {onMenuToggle ? (
+          <button
+            type="button"
+            className="page-header__menu"
+            aria-label="Abrir menu"
+            onClick={onMenuToggle}
+          >
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+            <span aria-hidden="true" />
+          </button>
+        ) : null}
         <div>
           <h1 className="page-header__title">{title}</h1>
           {subtitle ? (
